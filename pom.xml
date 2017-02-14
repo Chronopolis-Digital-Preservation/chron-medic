@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.chronopolis</groupId>
+        <artifactId>chronopolis</artifactId>
+        <version>1.5.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>medic</artifactId>
+    <version>1.5.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>Chron Medic</name>
+
+    <distributionManagement>
+        <repository>
+            <id>adapt-releases</id>
+            <name>Adapt Releases</name>
+            <url>https://scm.umiacs.umd.edu/adapt/repository/maven-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>adapt-snapshots</id>
+            <name>Adapt snapshots</name>
+            <url>https://scm.umiacs.umd.edu/adapt/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <repositories>
+        <repository>
+            <url>https://scm.umiacs.umd.edu/adapt/repository/maven-releases/</url>
+            <id>adapt-sonatype</id>
+            <name>ADAPT Project Repository</name>
+        </repository>
+        <repository>
+            <url>https://scm.umiacs.umd.edu/adapt/repository/maven-public/</url>
+            <id>adapt-sonatype-public</id>
+            <name>ADAPT Project Public Repository</name>
+        </repository>
+        <repository>
+            <url>https://scm.umiacs.umd.edu/adapt/repository/maven-snapshots/</url>
+            <id>adapt-snapshots</id>
+            <name>ADAPT Snapshot Repository</name>
+        </repository>
+    </repositories>
+
+</project>
