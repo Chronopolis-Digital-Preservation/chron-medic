@@ -15,4 +15,26 @@ public class RepairConfiguration {
      */
     private String backup;
 
+    /**
+     * Preservation area containing data
+     */
+    private String preservation;
+
+    public String getBackup() {
+        return backup;
+    }
+
+    public RepairConfiguration setBackup(String backup) {
+        this.backup = backup;
+        return this;
+    }
+
+    public String getPreservation() {
+        return preservation;
+    }
+
+    public RepairConfiguration setPreservation(String preservation) {
+        this.preservation = preservation;
+        return this;
+    }
 }

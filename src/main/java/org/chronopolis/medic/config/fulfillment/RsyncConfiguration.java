@@ -25,4 +25,31 @@ public class RsyncConfiguration {
      */
     private String server;
 
+    public String getPath() {
+        return path;
+    }
+
+    public RsyncConfiguration setPath(String path) {
+        this.path = path;
+        return this;
+    }
+
+    public String getStage() {
+        return stage;
+    }
+
+    public RsyncConfiguration setStage(String stage) {
+        this.stage = stage;
+        return this;
+    }
+
+    public String getServer() {
+        return server;
+    }
+
+    public RsyncConfiguration setServer(String server) {
+        this.server = server;
+        return this;
+    }
+
 }
