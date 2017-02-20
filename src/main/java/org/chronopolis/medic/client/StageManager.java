@@ -1,5 +1,7 @@
 package org.chronopolis.medic.client;
 
+import org.chronopolis.rest.models.repair.Repair;
+
 /**
  * Interface defining how our staging service will act
  *
@@ -11,12 +13,12 @@ public interface StageManager {
      * Stage files requested by a repair
      *
      */
-    void stage();
+    void stage(Repair repair);
 
     /**
      * Remove files staged for a repair
      *
      */
-    void clean();
+    void clean(Repair repair);
 
 }
