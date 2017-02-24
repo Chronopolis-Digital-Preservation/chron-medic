@@ -1,10 +1,12 @@
 package org.chronopolis.medic.client;
 
+import org.chronopolis.rest.models.repair.AuditStatus;
 import org.chronopolis.rest.models.repair.Fulfillment;
 import org.chronopolis.rest.models.repair.FulfillmentStrategy;
 import org.chronopolis.rest.models.repair.Repair;
 import org.chronopolis.rest.models.repair.RepairRequest;
 import org.springframework.data.domain.Page;
+import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
@@ -20,29 +22,44 @@ import java.util.Map;
  */
 public interface Repairs {
 
+    // Repair API
+
     @GET("api/repair/requests")
-    Page<Repair> getRepairs(@QueryMap Map<String, String> params);
+    Call<Page<Repair>> getRepairs(@QueryMap Map<String, String> params);
 
     @GET("api/repair/request/{id}")
-    Repair getRepair(@Path("id") Long id);
+    Call<Repair> getRepair(@Path("id") Long id);
 
-    @POST("api/requests")
-    Repair createRepair(@Body RepairRequest request);
+    @POST("api/repair/requests")
+    Call<Repair> createRepair(@Body RepairRequest request);
+
+    @POST("api/repair/requests/{id}/cleaned")
+    Call<Repair> repairCleaned(@Path("id") Long id);
+
+    @POST("api/repair/requests/{id}/backedup")
+    Call<Repair> repairBackedUp(@Path("id") Long id);
+
+    @POST("api/repair/requests/{id}/audit")
+    Call<Repair> repairAudit(@Path("id") Long id, @Body AuditStatus status);
+
+    // Fulfillment API
 
     @POST("api/requests/repair/{id}/fulfill")
-    Fulfillment fulfillRepair(@Path("id") Long id);
+    Call<Fulfillment> fulfillRepair(@Path("id") Long id);
 
     @GET("api/requests/fulfillments")
-    Page<Fulfillment> getFulfillments(@QueryMap Map<String, String> params);
+    Call<Page<Fulfillment>> getFulfillments(@QueryMap Map<String, String> params);
 
     @GET("api/requests/fulfillments/{id}")
-    Fulfillment getFulfillment(@Path("id") Long id);
+    Call<Fulfillment> getFulfillment(@Path("id") Long id);
 
     @POST("api/requests/fulfillments/{id}/ready")
-    Fulfillment readyFulfillment(@Path("id") Long id, @Body FulfillmentStrategy strategy);
+    Call<Fulfillment> readyFulfillment(@Path("id") Long id, @Body FulfillmentStrategy strategy);
 
     @POST("api/requests/fulfillments/{id}/complete")
-    Fulfillment completeFulfillment(@Path("id") Long id);
+    Call<Fulfillment> completeFulfillment(@Path("id") Long id);
 
+    @POST("api/requests/fulfillments/{id}/cleaned")
+    Call<Fulfillment> fulfillmentCleaned(@Path("id") Long id);
 
 }
