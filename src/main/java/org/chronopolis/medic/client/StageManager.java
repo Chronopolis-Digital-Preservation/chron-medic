@@ -13,12 +13,12 @@ public interface StageManager {
      * Stage files requested by a repair
      *
      */
-    void stage(Repair repair);
+    StagingResult stage(Repair repair);
 
     /**
      * Remove files staged for a repair
      *
      */
-    void clean(Repair repair);
+    boolean clean(Repair repair);
 
 }
