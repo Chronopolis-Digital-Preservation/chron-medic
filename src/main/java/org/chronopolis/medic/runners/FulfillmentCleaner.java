@@ -34,9 +34,19 @@ public class FulfillmentCleaner implements Runnable {
         call.enqueue(cb);
         Optional<Repair> repair = cb.get();
 
-        // Return boolean
-        repair.ifPresent(manager::clean);
+        repair.map(manager::clean)
+              .ifPresent(this::update);
+    }
 
-        // Update fulfillment
+    /**
+     * Update the repair api if our fulfillment has been successfully cleaned
+     *
+     * @param cleaned status of our operation
+     */
+    private void update(Boolean cleaned) {
+        if (cleaned) {
+            Call<Fulfillment> call = repairs.fulfillmentCleaned(fulfillment.getId());
+            call.enqueue(new OptionalCallback<>());
+        }
     }
 }
