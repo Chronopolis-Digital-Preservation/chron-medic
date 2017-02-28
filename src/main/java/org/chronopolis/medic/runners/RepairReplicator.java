@@ -28,5 +28,7 @@ public class RepairReplicator implements Runnable {
         Call<Fulfillment> call = repairs.getFulfillment(repair.getFulfillment());
         OptionalCallback<Fulfillment> cb = new OptionalCallback<>();
         call.enqueue(cb);
+        cb.get().ifPresent(manager::replicate);
+        // still need an update; the previous call will turn into a map once we're ready
     }
 }
