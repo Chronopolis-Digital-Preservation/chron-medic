@@ -3,6 +3,7 @@ package org.chronopolis.medic.runners;
 import org.chronopolis.medic.OptionalCallback;
 import org.chronopolis.medic.client.RepairManager;
 import org.chronopolis.medic.client.Repairs;
+import org.chronopolis.rest.models.repair.AuditStatus;
 import org.chronopolis.rest.models.repair.Fulfillment;
 import org.chronopolis.rest.models.repair.FulfillmentStatus;
 import org.chronopolis.rest.models.repair.Repair;
@@ -31,7 +32,17 @@ public class RepairValidator implements Runnable {
         call.enqueue(cb);
         cb.get().filter(fulfillment -> fulfillment.getStatus() == FulfillmentStatus.TRANSFERRED)
                 // we don't need the fulfillment anymore so just ignore it
-                .ifPresent(fulfillment -> manager.validateFiles(repair));
-                // still need an update after this, but that's a todo on the manager side atm
+                .map(ignored -> manager.validateFiles(repair))
+                .ifPresent(this::update);
+    }
+
+    /**
+     * Update a repair with the given AuditStatus
+     *
+     * @param status the result of the validateFiles operation
+     */
+    private void update(AuditStatus status) {
+        Call<Repair> call = repairs.repairAudited(repair.getId(), status);
+        call.enqueue(new OptionalCallback<>());
     }
 }
