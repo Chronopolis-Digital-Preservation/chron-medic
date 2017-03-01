@@ -2,6 +2,7 @@ package org.chronopolis.medic.client;
 
 import org.chronopolis.rest.models.repair.AuditStatus;
 import org.chronopolis.rest.models.repair.Fulfillment;
+import org.chronopolis.rest.models.repair.FulfillmentStatus;
 import org.chronopolis.rest.models.repair.FulfillmentStrategy;
 import org.chronopolis.rest.models.repair.Repair;
 import org.chronopolis.rest.models.repair.RepairRequest;
@@ -22,6 +23,7 @@ import java.util.Map;
  */
 public interface Repairs {
 
+    // todo: Should these be split up in to two interfaces?
     // Repair API
 
     @GET("api/repair/requests")
@@ -40,7 +42,7 @@ public interface Repairs {
     Call<Repair> repairBackedUp(@Path("id") Long id);
 
     @POST("api/repair/requests/{id}/audit")
-    Call<Repair> repairAudit(@Path("id") Long id, @Body AuditStatus status);
+    Call<Repair> repairAudited(@Path("id") Long id, @Body AuditStatus status);
 
     // Fulfillment API
 
@@ -53,13 +55,16 @@ public interface Repairs {
     @GET("api/requests/fulfillments/{id}")
     Call<Fulfillment> getFulfillment(@Path("id") Long id);
 
+    @POST("api/requests/fulfillments/{id}/cleaned")
+    Call<Fulfillment> fulfillmentCleaned(@Path("id") Long id);
+
+    @POST("api/requests/fulfillments/{id}/complete")
+    Call<Fulfillment> fulfillmentCompleted(@Path("id") Long id);
+
     @POST("api/requests/fulfillments/{id}/ready")
     Call<Fulfillment> readyFulfillment(@Path("id") Long id, @Body FulfillmentStrategy strategy);
 
-    @POST("api/requests/fulfillments/{id}/complete")
-    Call<Fulfillment> completeFulfillment(@Path("id") Long id);
-
-    @POST("api/requests/fulfillments/{id}/cleaned")
-    Call<Fulfillment> fulfillmentCleaned(@Path("id") Long id);
+    @POST("api/requests/fulfillments/{id}/status")
+    Call<Fulfillment> fulfillmentUpdated(@Path("id") Long id, @Body FulfillmentStatus status);
 
 }
