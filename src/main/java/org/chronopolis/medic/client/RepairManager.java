@@ -1,5 +1,6 @@
 package org.chronopolis.medic.client;
 
+import org.chronopolis.rest.models.repair.AuditStatus;
 import org.chronopolis.rest.models.repair.Fulfillment;
 import org.chronopolis.rest.models.repair.Repair;
 
@@ -14,14 +15,14 @@ public interface RepairManager {
      * Backup files which will be repaired
      *
      */
-    void backup(Repair repair);
+    boolean backup(Repair repair);
 
     /**
      * When a repair is complete (and successful), backed up files
      * can be removed
      *
      */
-    void removeBackup(Repair repair);
+    boolean removeBackup(Repair repair);
 
     /**
      * Replicate files from a remote node
@@ -33,6 +34,6 @@ public interface RepairManager {
      * Check replicated files
      *
      */
-    void validateFiles(Repair repair);
+    AuditStatus validateFiles(Repair repair);
 
 }
