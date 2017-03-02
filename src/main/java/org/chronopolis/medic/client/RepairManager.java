@@ -28,7 +28,7 @@ public interface RepairManager {
      * Replicate files from a remote node
      *
      */
-    void replicate(Fulfillment fulfillment);
+    boolean replicate(Fulfillment fulfillment, Repair repair);
 
     /**
      * Check replicated files
