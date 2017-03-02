@@ -4,6 +4,7 @@ import org.chronopolis.medic.OptionalCallback;
 import org.chronopolis.medic.client.RepairManager;
 import org.chronopolis.medic.client.Repairs;
 import org.chronopolis.rest.models.repair.Fulfillment;
+import org.chronopolis.rest.models.repair.FulfillmentStatus;
 import org.chronopolis.rest.models.repair.Repair;
 import retrofit2.Call;
 
@@ -28,7 +29,20 @@ public class RepairReplicator implements Runnable {
         Call<Fulfillment> call = repairs.getFulfillment(repair.getFulfillment());
         OptionalCallback<Fulfillment> cb = new OptionalCallback<>();
         call.enqueue(cb);
-        cb.get().ifPresent(manager::replicate);
-        // still need an update; the previous call will turn into a map once we're ready
+        cb.get()
+          .map(fulfillment -> manager.replicate(fulfillment, repair))
+          .ifPresent(this::update);
+    }
+
+    /**
+     * Update a repair's fulfillment with its transfer information
+     *
+     * @param success if the transfer succeeded
+     */
+    private void update(boolean success) {
+        if (success) {
+            Call<Fulfillment> call = repairs.fulfillmentUpdated(repair.getFulfillment(), FulfillmentStatus.TRANSFERRED);
+            call.enqueue(new OptionalCallback<>());
+        }
     }
 }
