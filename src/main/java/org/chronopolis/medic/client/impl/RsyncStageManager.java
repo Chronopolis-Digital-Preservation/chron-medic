@@ -41,6 +41,8 @@ public class RsyncStageManager implements StageManager {
     public StagingResult stage(Repair repair) {
         StagingResult result = new StagingResult();
 
+        String depositor = repair.getDepositor();
+        String collection = repair.getCollection();
         String stage = configuration.getStage();
         String preservation = repairConfiguration.getPreservation();
         List<String> files = repair.getFiles();
@@ -54,8 +56,10 @@ public class RsyncStageManager implements StageManager {
         files.forEach(f -> {
             // Break this out into a method which returns an optional
             try {
-                Files.createDirectories(Paths.get(stage, f));
-                Files.createSymbolicLink(Paths.get(stage, f), Paths.get(preservation, f));
+                Path staged = Paths.get(stage, depositor, collection, f);
+                Path preserved = Paths.get(preservation, depositor, collection, f);
+                Files.createDirectories(staged.getParent());
+                Files.createSymbolicLink(staged, preserved);
             } catch (IOException e) {
                 log.error("", e);
                 result.setSuccess(false);
@@ -74,7 +78,7 @@ public class RsyncStageManager implements StageManager {
         String stage = configuration.getStage();
         List<String> files = repair.getFiles();
         return files.stream()
-                .map(f -> Paths.get(stage, f))
+                .map(f -> Paths.get(stage, repair.getDepositor(), repair.getCollection(), f))
                 .map(this::tryDelete)
                 .allMatch(b -> b);
     }
@@ -88,9 +92,10 @@ public class RsyncStageManager implements StageManager {
      */
     private boolean tryDelete(Path file) {
         try {
+            log.trace("Trying to remove {}", file);
             Files.deleteIfExists(file);
         } catch (IOException e) {
-            log.error("", e);
+            log.error("Error ", e);
             return false;
         }
 
