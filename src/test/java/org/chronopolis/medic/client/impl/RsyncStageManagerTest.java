@@ -8,17 +8,19 @@ import org.chronopolis.rest.models.repair.FulfillmentStrategy;
 import org.chronopolis.rest.models.repair.FulfillmentType;
 import org.chronopolis.rest.models.repair.Repair;
 import org.chronopolis.rest.models.repair.RsyncStrategy;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * Tests for the RsyncStageManager
@@ -31,6 +33,10 @@ public class RsyncStageManagerTest {
 
     private final String TO = "test-node";
     private final String DEPOSITOR = "test-depositor";
+    private final String COLLECTION_STAGE = "test-corrupt";
+    private final String CORRUPT_1 = "data/corrupt-1";
+    private final String CORRUPT_2 = "data/sub-folder/corrupt-2";
+    private ImmutableList<String> files = ImmutableList.of(CORRUPT_1, CORRUPT_2);
 
     private Path preservation;
     private Path staging;
@@ -60,21 +66,13 @@ public class RsyncStageManagerTest {
         manager = new RsyncStageManager(repairConfiguration, rsyncConfiguration);
     }
 
-    @After
-    public void teardown() {
-    }
-
     @Test
     public void stage() throws Exception {
-        String COLLECTION_STAGE = "test-corrupt";
-        String CORRUPT_1 = "data/corrupt-1";
-        String CORRUPT_2 = "data/sub-folder/corrupt-2";
-
         Repair repair = new Repair();
         repair.setTo(TO);
         repair.setDepositor(DEPOSITOR);
         repair.setCollection(COLLECTION_STAGE);
-        repair.setFiles(ImmutableList.of(CORRUPT_1, CORRUPT_2));
+        repair.setFiles(files);
         StagingResult stage = manager.stage(repair);
 
         // Assert that our operation completed successfully
@@ -92,6 +90,41 @@ public class RsyncStageManagerTest {
         Path corruptSub = Paths.get(rsyncConfiguration.getStage(), repair.getDepositor(), repair.getCollection(), CORRUPT_2);
         Assert.assertTrue(corrupt.toFile().exists());
         Assert.assertTrue(corruptSub.toFile().exists());
+
+        // clean up our staged files
+        cleanStage(COLLECTION_STAGE, files);
+    }
+
+    @Test
+    public void stageAlreadyExists() throws Exception {
+        Repair repair = new Repair();
+        repair.setTo(TO);
+        repair.setDepositor(DEPOSITOR);
+        repair.setCollection(COLLECTION_STAGE);
+        repair.setFiles(files);
+        StagingResult stage = manager.stage(repair);
+        StagingResult duplicate = manager.stage(repair);
+
+        // Assert that our operation completed successfully
+        Assert.assertFalse(duplicate.isSuccess());
+
+        // clean up our staged files
+        cleanStage(COLLECTION_STAGE, files);
+    }
+
+    /**
+     * Clean up after ourselves
+     */
+    private void cleanStage(String collection, List<String> files) throws IOException {
+        files.forEach(file -> {
+            Path path = staging.resolve(DEPOSITOR).resolve(collection).resolve(file);
+            log.info("Removing {}", path);
+            try {
+                Files.deleteIfExists(path);
+            } catch (IOException ignored) {
+            }
+
+        });
     }
 
     @Test
