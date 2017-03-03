@@ -30,7 +30,7 @@ public class FulfillmentCleaner implements Runnable {
     @Override
     public void run() {
         OptionalCallback<Repair> cb = new OptionalCallback<>();
-        Call<Repair> call = repairs.getRepair(fulfillment.getId());
+        Call<Repair> call = repairs.getRepair(fulfillment.getRepair());
         call.enqueue(cb);
         Optional<Repair> repair = cb.get();
 
