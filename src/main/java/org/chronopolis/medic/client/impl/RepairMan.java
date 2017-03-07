@@ -52,9 +52,12 @@ public class RepairMan implements RepairManager {
         List<String> files = repair.getFiles();
         String preservation = configuration.getPreservation();
         String backup = configuration.getBackup();
+        String depositor = repair.getDepositor();
+        String collection = repair.getCollection();
 
         return files.stream()
-                .map(f -> tryCopy(Paths.get(preservation, f), Paths.get(backup, f)))
+                .map(f -> tryCopy(Paths.get(preservation, depositor, collection, f),
+                                  Paths.get(backup, depositor, collection, f)))
                 .allMatch(b -> b); // there has to be a better way to do this
         // could also use noneMatch false or smth to short circuit
     }
@@ -65,9 +68,11 @@ public class RepairMan implements RepairManager {
     public boolean removeBackup(Repair repair) {
         List<String> files = repair.getFiles();
         String backup = configuration.getBackup();
+        String depositor = repair.getDepositor();
+        String collection = repair.getCollection();
 
         return files.stream()
-                .map(f -> Paths.get(backup, f))
+                .map(f -> Paths.get(backup, depositor, collection, f))
                 .map(this::tryDelete)
                 .allMatch(b -> b);
     }
@@ -81,7 +86,8 @@ public class RepairMan implements RepairManager {
      */
     private boolean tryCopy(Path from, Path to) {
         try {
-            Files.copy(from, to, StandardCopyOption.COPY_ATTRIBUTES);
+            Files.createDirectories(to.getParent());
+            Files.copy(from, to, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             log.error("", e);
             return false;
@@ -117,6 +123,7 @@ public class RepairMan implements RepairManager {
         // todo: reify the type (get type -> cast strategy to corresponding object)
         switch (fulfillment.getType()) {
             case ACE:
+                success = false;
                 log.warn("ACE transfers are not currently supported");
                 break;
             case NODE_TO_NODE:
