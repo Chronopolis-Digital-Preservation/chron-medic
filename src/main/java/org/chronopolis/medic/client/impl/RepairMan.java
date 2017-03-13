@@ -1,12 +1,17 @@
 package org.chronopolis.medic.client.impl;
 
 import org.chronopolis.common.ace.AceService;
+import org.chronopolis.common.ace.CompareFile;
+import org.chronopolis.common.ace.CompareRequest;
+import org.chronopolis.common.ace.CompareResponse;
 import org.chronopolis.common.ace.GsonCollection;
 import org.chronopolis.common.exception.FileTransferException;
 import org.chronopolis.common.transfer.RSyncTransfer;
 import org.chronopolis.medic.OptionalCallback;
+import org.chronopolis.medic.client.CompareResult;
 import org.chronopolis.medic.client.RepairManager;
 import org.chronopolis.medic.config.repair.RepairConfiguration;
+import org.chronopolis.medic.support.Hasher;
 import org.chronopolis.rest.models.repair.AuditStatus;
 import org.chronopolis.rest.models.repair.Fulfillment;
 import org.chronopolis.rest.models.repair.Repair;
@@ -27,6 +32,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -48,16 +55,16 @@ public class RepairMan implements RepairManager {
     }
 
     @Override
-    public boolean backup(Repair repair) {
+    public boolean replace(Repair repair) {
         List<String> files = repair.getFiles();
         String preservation = configuration.getPreservation();
-        String backup = configuration.getBackup();
+        String stage = configuration.getStage();
         String depositor = repair.getDepositor();
         String collection = repair.getCollection();
 
         return files.stream()
-                .map(f -> tryCopy(Paths.get(preservation, depositor, collection, f),
-                                  Paths.get(backup, depositor, collection, f)))
+                .map(f -> tryCopy(Paths.get(stage, depositor, collection, f),
+                                  Paths.get(preservation, depositor, collection, f)))
                 .allMatch(b -> b); // there has to be a better way to do this
         // could also use noneMatch false or smth to short circuit
     }
@@ -65,14 +72,15 @@ public class RepairMan implements RepairManager {
 
 
     @Override
-    public boolean removeBackup(Repair repair) {
+    public boolean clean(Repair repair) {
         List<String> files = repair.getFiles();
-        String backup = configuration.getBackup();
+        String stage = configuration.getStage();
         String depositor = repair.getDepositor();
         String collection = repair.getCollection();
 
+        // Might be worth it to do a directory stream or smth
         return files.stream()
-                .map(f -> Paths.get(backup, depositor, collection, f))
+                .map(f -> Paths.get(stage, depositor, collection, f))
                 .map(this::tryDelete)
                 .allMatch(b -> b);
     }
@@ -147,7 +155,7 @@ public class RepairMan implements RepairManager {
         RsyncStrategy rsync = (RsyncStrategy) fulfillment.getCredentials();
         RSyncTransfer transfer = new RSyncTransfer(rsync.getLink());
         try {
-            transfer.getFile(rsync.getLink(), Paths.get(configuration.getPreservation(), repair.getDepositor()));
+            transfer.getFile(rsync.getLink(), Paths.get(configuration.getStage(), repair.getDepositor()));
             log(repair, transfer.getOutput());
         } catch (FileTransferException e) {
             log(repair, transfer.getErrors());
@@ -174,7 +182,7 @@ public class RepairMan implements RepairManager {
     }
 
     @Override
-    public AuditStatus validateFiles(Repair repair) {
+    public AuditStatus audit(Repair repair) {
         AuditStatus current = repair.getAudit();
         AuditStatus next = AuditStatus.PRE;
 
@@ -205,6 +213,67 @@ public class RepairMan implements RepairManager {
         }
 
         return next;
+    }
+
+    @Override
+    public CompareResult validate(Repair repair) {
+        OptionalCallback<GsonCollection> cCallback = new OptionalCallback<>();
+        Call<GsonCollection> cCall = ace.getCollectionByName(repair.getCollection(), repair.getDepositor());
+        cCall.enqueue(cCallback);
+        Optional<CompareResult> validated = cCallback.get()
+                .flatMap(collection -> compare(repair, collection))
+                .map(response -> checkCompare(repair, response));
+
+        return validated.orElseGet(() -> CompareResult.CONNECTION_ERROR);
+    }
+
+    /**
+     * Compile a list of {@link CompareFile}s and call the ACE compare
+     * api with them
+     *
+     * @param repair the repair containing the files
+     * @param collection the collection to compare against
+     * @return the response of the ACE api
+     */
+    private Optional<CompareResponse> compare(Repair repair, GsonCollection collection) {
+        CompareRequest request = new CompareRequest();
+        Hasher hasher = new Hasher(Paths.get(configuration.getStage()));
+        // Collect files + digests
+        List<CompareFile> comparisons = repair.getFiles()
+                .stream()
+                .map(file -> hasher.hash(Paths.get(file)))
+                .collect(Collectors.toList()); // might be able to just add here but w.e.
+        request.setComparisons(comparisons);
+
+        //
+        OptionalCallback<CompareResponse> callback = new OptionalCallback<>();
+        Call<CompareResponse> call = ace.compareToCollection(collection.getId(), request);
+        call.enqueue(callback);
+        return callback.get();
+    }
+
+    /**
+     * Check a {@link CompareResponse} object and return the result of said comparison
+     *
+     * @param repair the ongoing repair
+     * @param response the response to check
+     * @return the value of the result
+     */
+    private CompareResult checkCompare(Repair repair, CompareResponse response) {
+        CompareResult result = CompareResult.VALID;
+
+        if (!response.getDiff().isEmpty() || !response.getNotFound().isEmpty()) {
+            result = CompareResult.INVALID;
+            String collection = repair.getCollection();
+            int total = response.getDiff().size() + response.getNotFound().size();
+
+            // log the problems
+            log.warn("{} - Found {} errors", collection, total);
+            response.getDiff().forEach(file -> log.warn("{} - {} is different", collection, file));
+            response.getNotFound().forEach(file -> log.warn("{} - {} was not found", collection, file));
+        }
+
+        return result;
     }
 
     /**
