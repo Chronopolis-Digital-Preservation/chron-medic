@@ -13,19 +13,19 @@ public class RepairConfiguration {
     /**
      * Directory to back files up to
      */
-    private String backup;
+    private String stage;
 
     /**
      * Preservation area containing data
      */
     private String preservation;
 
-    public String getBackup() {
-        return backup;
+    public String getStage() {
+        return stage;
     }
 
-    public RepairConfiguration setBackup(String backup) {
-        this.backup = backup;
+    public RepairConfiguration setStage(String stage) {
+        this.stage = stage;
         return this;
     }
 

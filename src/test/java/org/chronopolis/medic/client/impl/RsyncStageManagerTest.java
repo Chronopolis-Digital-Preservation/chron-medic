@@ -55,7 +55,7 @@ public class RsyncStageManagerTest {
         backup = Paths.get(root.toURI()).resolve("backup");
 
         repairConfiguration = new RepairConfiguration();
-        repairConfiguration.setBackup(backup.toString());
+        repairConfiguration.setStage(backup.toString());
         repairConfiguration.setPreservation(preservation.toString());
 
         rsyncConfiguration = new RsyncConfiguration();
