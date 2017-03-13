@@ -32,7 +32,7 @@ public class RepairValidator implements Runnable {
         call.enqueue(cb);
         cb.get().filter(fulfillment -> fulfillment.getStatus() == FulfillmentStatus.TRANSFERRED)
                 // we don't need the fulfillment anymore so just ignore it
-                .map(ignored -> manager.validateFiles(repair))
+                .map(ignored -> manager.audit(repair))
                 .ifPresent(this::update);
     }
 

@@ -12,28 +12,46 @@ import org.chronopolis.rest.models.repair.Repair;
 public interface RepairManager {
 
     /**
-     * Backup files which will be repaired
+     * Update corrupt files specific by a repair with the
+     * replicated versions
      *
+     * @param repair The repair
+     * @return if the files in the repair have been replaced
      */
-    boolean backup(Repair repair);
+    boolean replace(Repair repair);
 
     /**
-     * When a repair is complete (and successful), backed up files
+     * When a repair is complete (and successful), replicated files
      * can be removed
      *
+     * @param repair The repair
+     * @return if the replicated files have been cleaned
      */
-    boolean removeBackup(Repair repair);
+    boolean clean(Repair repair);
 
     /**
      * Replicate files from a remote node
      *
+     * @param fulfillment the fulfillment to replicate from
+     * @param repair the repair
+     * @return the success of the replication
      */
     boolean replicate(Fulfillment fulfillment, Repair repair);
 
     /**
      * Check replicated files
      *
+     * @param repair The repair to audit
+     * @return the status of the repair collection in ACE
      */
-    AuditStatus validateFiles(Repair repair);
+    AuditStatus audit(Repair repair);
+
+    /**
+     * Validate a set of files against ACE
+     *
+     * @param repair the repair to validate
+     * @return whether all the files are valid
+     */
+    CompareResult validate(Repair repair);
 
 }

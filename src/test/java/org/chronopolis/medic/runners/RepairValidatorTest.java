@@ -60,13 +60,13 @@ public class RepairValidatorTest {
         fulfillment.setId(1L).setRepair(2L).setStatus(FulfillmentStatus.TRANSFERRED);
 
         when(repairs.getFulfillment(eq(repair.getFulfillment()))).thenReturn(new CallWrapper<>(fulfillment));
-        when(manager.validateFiles(any(Repair.class))).thenReturn(success);
+        when(manager.audit(any(Repair.class))).thenReturn(success);
         when(repairs.repairAudited(eq(repair.getId()), eq(success))).thenReturn(new CallWrapper<>(repair));
 
         validator.run();
 
         verify(repairs, times(1)).getFulfillment(eq(repair.getFulfillment()));
-        verify(manager, times(1)).validateFiles(any(Repair.class));
+        verify(manager, times(1)).audit(any(Repair.class));
         verify(repairs, times(1)).repairAudited(eq(repair.getId()), eq(success));
     }
 
@@ -83,7 +83,7 @@ public class RepairValidatorTest {
         validator.run();
 
         verify(repairs, times(1)).getFulfillment(eq(repair.getFulfillment()));
-        verify(manager, times(0)).validateFiles(any(Repair.class));
+        verify(manager, times(0)).audit(any(Repair.class));
         verify(repairs, times(0)).repairAudited(eq(repair.getId()), any(AuditStatus.class));
     }
 
@@ -100,13 +100,13 @@ public class RepairValidatorTest {
         fulfillment.setId(1L).setRepair(2L).setStatus(FulfillmentStatus.TRANSFERRED);
 
         when(repairs.getFulfillment(eq(repair.getFulfillment()))).thenReturn(new CallWrapper<>(fulfillment));
-        when(manager.validateFiles(any(Repair.class))).thenReturn(auditing);
+        when(manager.audit(any(Repair.class))).thenReturn(auditing);
         when(repairs.repairAudited(eq(repair.getId()), eq(auditing))).thenReturn(new CallWrapper<>(repair));
 
         validator.run();
 
         verify(repairs, times(1)).getFulfillment(eq(repair.getFulfillment()));
-        verify(manager, times(1)).validateFiles(any(Repair.class));
+        verify(manager, times(1)).audit(any(Repair.class));
         verify(repairs, times(1)).repairAudited(eq(repair.getId()), eq(auditing));
     }
 
@@ -123,7 +123,7 @@ public class RepairValidatorTest {
         validator.run();
 
         verify(repairs, times(1)).getFulfillment(eq(repair.getFulfillment()));
-        verify(manager, times(0)).validateFiles(any(Repair.class));
+        verify(manager, times(0)).audit(any(Repair.class));
         verify(repairs, times(0)).repairAudited(eq(repair.getId()), any(AuditStatus.class));
     }
 

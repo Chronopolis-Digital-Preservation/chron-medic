@@ -25,7 +25,7 @@ public class RepairCleaner implements Runnable {
 
     @Override
     public void run() {
-        boolean removed = manager.removeBackup(repair);
+        boolean removed = manager.clean(repair);
         if (removed) {
             Call<Repair> call = repairs.repairCleaned(repair.getId());
             call.enqueue(new OptionalCallback<>());

@@ -59,7 +59,7 @@ public class RepairManTest {
 
         configuration = new RepairConfiguration();
         configuration.setPreservation(preservation.toString());
-        configuration.setBackup(backup.toString());
+        configuration.setStage(backup.toString());
 
         manager = new RepairMan(ace, configuration);
     }
@@ -73,7 +73,7 @@ public class RepairManTest {
                 .setCollection(collection)
                 .setDepositor(DEPOSITOR);
 
-        boolean success = manager.backup(repair);
+        boolean success = manager.replace(repair);
 
         Assert.assertTrue(success);
         for (String file : files) {
@@ -91,7 +91,7 @@ public class RepairManTest {
                 .setCollection(collection)
                 .setFiles(files);
 
-        boolean success = manager.removeBackup(repair);
+        boolean success = manager.clean(repair);
 
         Assert.assertTrue(success);
         for (String file : files) {
@@ -156,7 +156,7 @@ public class RepairManTest {
 
         when(ace.getCollectionByName(eq(COLLECTION), eq(DEPOSITOR))).thenReturn(new CallWrapper<>(collection));
         when(ace.startAudit(eq(collection.getId()), eq(true))).thenReturn(new CallWrapper<>(null)); // uhhh I guess
-        AuditStatus status = manager.validateFiles(repair);
+        AuditStatus status = manager.audit(repair);
 
         Assert.assertEquals(AuditStatus.AUDITING, status);
         verify(ace, times(1)).getCollectionByName(eq(COLLECTION), eq(DEPOSITOR));
@@ -177,7 +177,7 @@ public class RepairManTest {
         collection.setId(1L);
 
         when(ace.getCollectionByName(eq(COLLECTION), eq(DEPOSITOR))).thenReturn(new NotFoundCallWrapper<>(collection));
-        AuditStatus status = manager.validateFiles(repair);
+        AuditStatus status = manager.audit(repair);
 
         Assert.assertEquals(AuditStatus.PRE, status);
         verify(ace, times(1)).getCollectionByName(eq(COLLECTION), eq(DEPOSITOR));
@@ -199,7 +199,7 @@ public class RepairManTest {
         collection.setId(1L);
 
         when(ace.getCollectionByName(eq(COLLECTION), eq(DEPOSITOR))).thenReturn(new CallWrapper<>(collection));
-        AuditStatus status = manager.validateFiles(repair);
+        AuditStatus status = manager.audit(repair);
 
         Assert.assertEquals(AuditStatus.SUCCESS, status);
         verify(ace, times(1)).getCollectionByName(eq(COLLECTION), eq(DEPOSITOR));

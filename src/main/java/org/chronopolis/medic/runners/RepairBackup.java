@@ -25,7 +25,7 @@ public class RepairBackup implements Runnable {
 
     @Override
     public void run() {
-        boolean backup = manager.backup(repair);
+        boolean backup = manager.replace(repair);
         if (backup) {
             Call<Repair> call = repairs.repairBackedUp(repair.getId());
             call.enqueue(new OptionalCallback<>());
