@@ -11,6 +11,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.QueryMap;
 
@@ -35,13 +36,13 @@ public interface Repairs {
     @POST("api/repair/requests")
     Call<Repair> createRepair(@Body RepairRequest request);
 
-    @POST("api/repair/requests/{id}/cleaned")
+    @PUT("api/repair/requests/{id}/cleaned")
     Call<Repair> repairCleaned(@Path("id") Long id);
 
-    @POST("api/repair/requests/{id}/backedup")
-    Call<Repair> repairBackedUp(@Path("id") Long id);
+    @PUT("api/repair/requests/{id}/replaced")
+    Call<Repair> repairCopied(@Path("id") Long id);
 
-    @POST("api/repair/requests/{id}/audit")
+    @PUT("api/repair/requests/{id}/audit")
     Call<Repair> repairAudited(@Path("id") Long id, @Body AuditStatus status);
 
     // Fulfillment API
@@ -55,16 +56,19 @@ public interface Repairs {
     @GET("api/requests/fulfillments/{id}")
     Call<Fulfillment> getFulfillment(@Path("id") Long id);
 
-    @POST("api/requests/fulfillments/{id}/cleaned")
+    @PUT("api/requests/fulfillments/{id}/cleaned")
     Call<Fulfillment> fulfillmentCleaned(@Path("id") Long id);
 
-    @POST("api/requests/fulfillments/{id}/complete")
+    @PUT("api/requests/fulfillments/{id}/complete")
     Call<Fulfillment> fulfillmentCompleted(@Path("id") Long id);
 
-    @POST("api/requests/fulfillments/{id}/ready")
+    @PUT("api/requests/fulfillments/{id}/validated")
+    Call<Fulfillment> fulfillmentValidated(@Path("id") Long id);
+
+    @PUT("api/requests/fulfillments/{id}/ready")
     Call<Fulfillment> readyFulfillment(@Path("id") Long id, @Body FulfillmentStrategy strategy);
 
-    @POST("api/requests/fulfillments/{id}/status")
+    @PUT("api/requests/fulfillments/{id}/status")
     Call<Fulfillment> fulfillmentUpdated(@Path("id") Long id, @Body FulfillmentStatus status);
 
 }
