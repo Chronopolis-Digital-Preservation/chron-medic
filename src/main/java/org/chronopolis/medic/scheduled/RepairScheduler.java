@@ -6,10 +6,10 @@ import org.chronopolis.medic.OptionalCallback;
 import org.chronopolis.medic.client.RepairManager;
 import org.chronopolis.medic.client.Repairs;
 import org.chronopolis.medic.config.IngestConfiguration;
-import org.chronopolis.medic.runners.RepairBackup;
+import org.chronopolis.medic.runners.RepairAuditor;
 import org.chronopolis.medic.runners.RepairCleaner;
 import org.chronopolis.medic.runners.RepairReplicator;
-import org.chronopolis.medic.runners.RepairValidator;
+import org.chronopolis.rest.models.repair.FulfillmentStatus;
 import org.chronopolis.rest.models.repair.Repair;
 import org.chronopolis.rest.models.repair.RepairStatus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +22,7 @@ import retrofit2.Call;
 import java.util.Optional;
 
 /**
+ * Descending through dimensions darkened by dementia
  * Scheduled tasks which query the repair api for pending operations
  *
  * Created by shake on 2/16/17.
@@ -59,24 +60,27 @@ public class RepairScheduler {
     // Scheduled Tasks to run query and start threads
 
     @Scheduled
-    public void backup() {
+    public void repair() {
+        // todo: query on fulfillment
         ImmutableMap<String, String> params = ImmutableMap.of("to", configuration.getUsername(),
-                "backup", String.valueOf(false));
-        getRepairs(params).ifPresent(this::doBackup);
+                "replaced", String.valueOf(false),
+                "status", RepairStatus.FULFILLING.toString());
+        getRepairs(params).ifPresent(this::replicate);
     }
 
     @Scheduled
-    public void repair() {
+    public void validate() {
+        // todo: query on fulfillments
         ImmutableMap<String, String> params = ImmutableMap.of("to", configuration.getUsername(),
-                "backup", String.valueOf(true),                 // only attempt repairs which are already backed up
-                "status", RepairStatus.FULFILLING.toString());
-        getRepairs(params).ifPresent(this::submit);
+                "validated", String.valueOf(false),
+                "status", FulfillmentStatus.TRANSFERRED.toString());
+        getRepairs(params).ifPresent(this::validate);
     }
 
     @Scheduled
     public void audit() {
         ImmutableMap<String, String> params = ImmutableMap.of("to", configuration.getUsername(),
-                "backup", String.valueOf(true),                 // only attempt repairs which are already backed up
+                "replaced", String.valueOf(true),
                 "status", RepairStatus.FULFILLING.toString());
         getRepairs(params).ifPresent(this::runAudit);
     }
@@ -84,27 +88,25 @@ public class RepairScheduler {
     @Scheduled
     public void clean() {
         ImmutableMap<String, String> params = ImmutableMap.of("to", configuration.getUsername(),
-                "backup", String.valueOf(false),
-                "status", RepairStatus.REPAIRED.toString());
+                "cleaned", String.valueOf(false),
+                "status", RepairStatus.REPAIRED.toString()); // repaired or failed
         getRepairs(params).ifPresent(this::runClean);
     }
 
     // Helpers to submit threads to our executor
 
-    private void doBackup(Page<Repair> repairPage) {
-        repairPage.forEach(repair -> executor.submitIfAvailable(new RepairBackup(repair, repairs, manager), repair));
-    }
-
-    private void submit(Page<Repair> repairPage) {
+    private void replicate(Page<Repair> repairPage) {
         repairPage.forEach(repair -> executor.submitIfAvailable(new RepairReplicator(repair, repairs, manager), repair));
     }
 
     private void runAudit(Page<Repair> repairPage) {
-        repairPage.forEach(repair -> executor.submitIfAvailable(new RepairValidator(repair, repairs, manager), repair));
+        repairPage.forEach(repair -> executor.submitIfAvailable(new RepairAuditor(repair, repairs, manager), repair));
     }
 
     private void runClean(Page<Repair> repairPage) {
         repairPage.forEach(repair -> executor.submitIfAvailable(new RepairCleaner(repair, repairs, manager), repair));
     }
 
+    private void validate(Page<Repair> repairPage) {
+    }
 }
