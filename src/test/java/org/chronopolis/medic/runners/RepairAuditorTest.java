@@ -23,11 +23,11 @@ import static org.mockito.Mockito.when;
  *
  * Created by shake on 3/3/17.
  */
-public class RepairValidatorTest {
+public class RepairAuditorTest {
 
     private Repair repair;
     private Fulfillment fulfillment;
-    private RepairValidator validator;
+    private RepairAuditor validator;
 
     @Mock
     private Repairs repairs;
@@ -45,7 +45,7 @@ public class RepairValidatorTest {
         fulfillment.setId(1L);
         fulfillment.setRepair(2L);
 
-        validator = new RepairValidator(repair, repairs, manager);
+        validator = new RepairAuditor(repair, repairs, manager);
     }
 
     /**

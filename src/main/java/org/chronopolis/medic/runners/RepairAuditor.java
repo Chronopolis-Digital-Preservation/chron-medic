@@ -13,13 +13,13 @@ import retrofit2.Call;
  *
  * Created by shake on 2/28/17.
  */
-public class RepairValidator implements Runnable {
+public class RepairAuditor implements Runnable {
 
     private final Repair repair;
     private final Repairs repairs;
     private final RepairManager manager;
 
-    public RepairValidator(Repair repair, Repairs repairs, RepairManager manager) {
+    public RepairAuditor(Repair repair, Repairs repairs, RepairManager manager) {
         this.repair = repair;
         this.repairs = repairs;
         this.manager = manager;
