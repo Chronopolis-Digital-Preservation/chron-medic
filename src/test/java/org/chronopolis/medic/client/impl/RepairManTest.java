@@ -1,8 +1,12 @@
 package org.chronopolis.medic.client.impl;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import org.chronopolis.common.ace.AceService;
+import org.chronopolis.common.ace.CompareRequest;
+import org.chronopolis.common.ace.CompareResponse;
 import org.chronopolis.common.ace.GsonCollection;
+import org.chronopolis.medic.client.CompareResult;
 import org.chronopolis.medic.config.repair.RepairConfiguration;
 import org.chronopolis.medic.support.CallWrapper;
 import org.chronopolis.medic.support.NotFoundCallWrapper;
@@ -21,6 +25,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -36,6 +41,7 @@ public class RepairManTest {
 
     private final String DEPOSITOR = "test-depositor";
     private final String COLLECTION = "test-collection";
+    private final String COLLECTION_VALIDATE = "test-validate";
 
     @Mock
     private AceService ace;
@@ -45,7 +51,6 @@ public class RepairManTest {
 
     private Path preservation;
     private Path staging;
-    private Path backup;
 
     @Before
     public void setup() throws URISyntaxException {
@@ -55,18 +60,17 @@ public class RepairManTest {
 
         preservation = Paths.get(root.toURI()).resolve("preservation");
         staging = Paths.get(root.toURI()).resolve("staging");
-        backup = Paths.get(root.toURI()).resolve("backup");
 
         configuration = new RepairConfiguration();
         configuration.setPreservation(preservation.toString());
-        configuration.setStage(backup.toString());
+        configuration.setStage(staging.toString());
 
         manager = new RepairMan(ace, configuration);
     }
 
     @Test
-    public void backup() throws Exception {
-        String collection = "test-backup";
+    public void replace() throws Exception {
+        String collection = "test-preserve";
         ImmutableList<String> files = ImmutableList.of("data/backup-1", "data/sub/backup-2");
         Repair repair = new Repair()
                 .setFiles(files)
@@ -77,13 +81,13 @@ public class RepairManTest {
 
         Assert.assertTrue(success);
         for (String file : files) {
-            Path path = backup.resolve(DEPOSITOR).resolve(collection).resolve(file);
+            Path path = preservation.resolve(DEPOSITOR).resolve(collection).resolve(file);
             Assert.assertTrue(path.toFile().exists());
         }
     }
 
     @Test
-    public void removeBackup() throws Exception {
+    public void remove() throws Exception {
         String collection = "test-remove";
         ImmutableList<String> files = ImmutableList.of("data/remove-1", "data/sub/remove-2");
         Repair repair = new Repair()
@@ -95,7 +99,7 @@ public class RepairManTest {
 
         Assert.assertTrue(success);
         for (String file : files) {
-            Path path = backup.resolve(DEPOSITOR).resolve(collection).resolve(file);
+            Path path = staging.resolve(DEPOSITOR).resolve(collection).resolve(file);
             Assert.assertFalse(path.toFile().exists());
         }
     }
@@ -207,6 +211,75 @@ public class RepairManTest {
 
     @Test
     public void checkAuditOngoing() throws Exception {
+    }
+
+    @Test
+    public void testValidateSuccess() {
+        String file = "/data/file-1";
+        Long id = 1L;
+        CompareResult result = validate(ImmutableList.of(file), ImmutableSet.of(file), ImmutableSet.of(), ImmutableSet.of(), id);
+
+        Assert.assertNotNull(result);
+        Assert.assertEquals(CompareResult.VALID, result);
+        verify(ace, times(1)).getCollectionByName(eq(COLLECTION_VALIDATE), eq(DEPOSITOR));
+        verify(ace, times(1)).compareToCollection(eq(id), any(CompareRequest.class));
+    }
+
+    @Test
+    public void testValidateFileNotFound() {
+        String file = "/data/file-1";
+        String notFound = "/data/file-not-found";
+        Long id = 1L;
+
+        CompareResult result = validate(ImmutableList.of(file, notFound), ImmutableSet.of(file), ImmutableSet.of(), ImmutableSet.of(notFound), id);
+
+        Assert.assertNotNull(result);
+        Assert.assertEquals(CompareResult.INVALID, result);
+        verify(ace, times(1)).getCollectionByName(eq(COLLECTION_VALIDATE), eq(DEPOSITOR));
+        verify(ace, times(1)).compareToCollection(eq(id), any(CompareRequest.class));
+    }
+
+    @Test
+    public void testValidateFileIsDifferent() {
+        String file = "/data/file-1";
+        String invalid = "/data/file-invalid";
+        Long id = 1L;
+
+        CompareResult result = validate(ImmutableList.of(file, invalid), ImmutableSet.of(file), ImmutableSet.of(invalid), ImmutableSet.of(), id);
+
+        Assert.assertNotNull(result);
+        Assert.assertEquals(CompareResult.INVALID, result);
+        verify(ace, times(1)).getCollectionByName(eq(COLLECTION_VALIDATE), eq(DEPOSITOR));
+        verify(ace, times(1)).compareToCollection(eq(id), any(CompareRequest.class));
+    }
+
+    private CompareResult validate(ImmutableList<String> files,
+                                   ImmutableSet<String> match,
+                                   ImmutableSet<String> diff,
+                                   ImmutableSet<String> notFound,
+                                   Long collectionId) {
+        Repair repair = new Repair()
+                .setFiles(files)
+                .setDepositor(DEPOSITOR)
+                .setCollection(COLLECTION_VALIDATE)
+                .setAudit(AuditStatus.AUDITING);
+
+        GsonCollection collection = new GsonCollection.Builder()
+                .state("A")
+                .group(DEPOSITOR)
+                .name(COLLECTION_VALIDATE)
+                .build();
+        collection.setId(collectionId);
+
+        CompareResponse response = new CompareResponse();
+        response.setMatch(match);
+        response.setDiff(diff);
+        response.setNotFound(notFound);
+
+        when(ace.getCollectionByName(eq(COLLECTION_VALIDATE), eq(DEPOSITOR))).thenReturn(new CallWrapper<>(collection));
+        when(ace.compareToCollection(eq(collection.getId()), any(CompareRequest.class))).thenReturn(new CallWrapper<>(response));
+
+        return manager.validate(repair);
     }
 
 }
