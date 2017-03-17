@@ -13,8 +13,6 @@ import retrofit2.Call;
 /**
  * Validate and Copy the files from a fulfillment
  *
- * todo: split up copy operations?
- *
  * Created by shake on 3/15/17.
  */
 public class RepairValidator implements Runnable {
