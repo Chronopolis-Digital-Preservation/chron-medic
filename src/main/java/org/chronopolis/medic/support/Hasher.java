@@ -28,7 +28,7 @@ public class Hasher {
         CompareFile compare = new CompareFile();
         String hash;
         try {
-            HashCode hashcode = Files.hash(path.toFile(), Hashing.sha256());
+            HashCode hashcode = Files.hash(root.resolve(path).toFile(), Hashing.sha256());
             hash = hashcode.toString();
         } catch (IOException e) {
             log.error("Error hashing file", e);
