@@ -1,0 +1,19 @@
+# Application Configuration for the Medic
+
+cron:
+  repair: 0 0 * * * *
+  fulfillment: 0 0 * * * *
+
+repair:
+  stage: /data/chronopolis/backup
+  preservation: /data/chronopolis/perservation
+
+ingest:
+  endpoint: http://localhost:8000
+  username: my-user
+  password: my-pass
+
+rsync:
+  path: bags/
+  stage: /export/outgoing/bags
+  server: my-server
