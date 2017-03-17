@@ -217,10 +217,10 @@ public class RepairMan implements RepairManager {
 
     @Override
     public CompareResult validate(Repair repair) {
-        OptionalCallback<GsonCollection> cCallback = new OptionalCallback<>();
-        Call<GsonCollection> cCall = ace.getCollectionByName(repair.getCollection(), repair.getDepositor());
-        cCall.enqueue(cCallback);
-        Optional<CompareResult> validated = cCallback.get()
+        OptionalCallback<GsonCollection> callback = new OptionalCallback<>();
+        Call<GsonCollection> call = ace.getCollectionByName(repair.getCollection(), repair.getDepositor());
+        call.enqueue(callback);
+        Optional<CompareResult> validated = callback.get()
                 .flatMap(collection -> compare(repair, collection))
                 .map(response -> checkCompare(repair, response));
 
@@ -241,7 +241,7 @@ public class RepairMan implements RepairManager {
         // Collect files + digests
         List<CompareFile> comparisons = repair.getFiles()
                 .stream()
-                .map(file -> hasher.hash(Paths.get(file)))
+                .map(file -> hasher.hash(Paths.get(repair.getDepositor(), repair.getCollection(), file)))
                 .collect(Collectors.toList()); // might be able to just add here but w.e.
         request.setComparisons(comparisons);
 
