@@ -14,13 +14,14 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 /**
  * Fulfillment tasks which are run. Consists of staging and cleaning.
  *
  * Created by shake on 2/16/17.
  */
-@Profile("fulfill")
+@Component
 @EnableScheduling
 public class FulfillScheduler extends Scheduler<Fulfillment> {
 

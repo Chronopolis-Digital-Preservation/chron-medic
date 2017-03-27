@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 /**
  * Descending through dimensions darkened by dementia
@@ -27,7 +28,7 @@ import org.springframework.scheduling.annotation.Scheduled;
  *
  * Created by shake on 2/16/17.
  */
-@Profile("repair")
+@Component
 @EnableScheduling
 public class RepairScheduler extends Scheduler<Repair> {
     private final Logger log = LoggerFactory.getLogger(RepairScheduler.class);
