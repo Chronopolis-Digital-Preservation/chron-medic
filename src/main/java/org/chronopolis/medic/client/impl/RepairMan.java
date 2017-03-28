@@ -63,10 +63,8 @@ public class RepairMan implements RepairManager {
         String collection = repair.getCollection();
 
         return files.stream()
-                .map(f -> tryCopy(Paths.get(stage, depositor, collection, f),
-                                  Paths.get(preservation, depositor, collection, f)))
-                .allMatch(b -> b); // there has to be a better way to do this
-        // could also use noneMatch false or smth to short circuit
+                .allMatch(f -> tryCopy(Paths.get(stage, depositor, collection, f),
+                                       Paths.get(preservation, depositor, collection, f)));
     }
 
 
@@ -81,8 +79,7 @@ public class RepairMan implements RepairManager {
         // Might be worth it to do a directory stream or smth
         return files.stream()
                 .map(f -> Paths.get(stage, depositor, collection, f))
-                .map(this::tryDelete)
-                .allMatch(b -> b);
+                .allMatch(this::tryDelete);
     }
 
     /**

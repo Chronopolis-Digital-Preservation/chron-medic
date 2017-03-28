@@ -79,8 +79,7 @@ public class RsyncStageManager implements StageManager {
         List<String> files = repair.getFiles();
         return files.stream()
                 .map(f -> Paths.get(stage, repair.getDepositor(), repair.getCollection(), f))
-                .map(this::tryDelete)
-                .allMatch(b -> b);
+                .allMatch(this::tryDelete);
     }
 
 
