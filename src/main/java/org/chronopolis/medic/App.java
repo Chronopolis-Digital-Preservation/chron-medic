@@ -1,5 +1,7 @@
 package org.chronopolis.medic;
 
+import org.chronopolis.medic.config.fulfillment.RsyncConfiguration;
+import org.chronopolis.medic.config.repair.RepairConfiguration;
 import org.chronopolis.medic.service.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -8,16 +10,20 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 /**
- * Entrypoint for our application
+ * Entry point for our application
  *
  * Created by shake on 2/16/17.
  */
 @SpringBootApplication
-@EnableConfigurationProperties
+@EnableConfigurationProperties({RepairConfiguration.class, RsyncConfiguration.class})
 public class App implements CommandLineRunner {
 
+    private final Service repairService;
+
     @Autowired
-    private Service repairService;
+    public App(Service repairService) {
+        this.repairService = repairService;
+    }
 
     public static void main(String[] args) {
         SpringApplication.exit(SpringApplication.run(App.class));
