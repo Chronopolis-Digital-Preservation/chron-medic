@@ -10,20 +10,16 @@
 # User to execute as
 CHRON_USER="chronopolis"
 
-REP_JAR="/usr/lib/chronopolis/medic.jar"
-REP_PID_FILE="/var/run/chron-medic.pid"
+REP_JAR="/usr/lib/chronopolis/chron-repair.jar"
+REP_PID_FILE="/var/run/chron-repair"
 
 # Set the location which holds our repair config
-SPRING_CONFIG_NAME="repair.yml"
+SPRING_CONFIG_NAME="repair"
 SPRING_CONFIG_LOCATION="/etc/chronopolis/"
 
 JAVA_BIN=/usr/bin/java
 JAVA_CMD="$JAVA_BIN -jar $REP_JAR"
-PARAMS="--spring.config.location=$SPRING_CONFIG_LOCATION &"
-
-# For whatever reason I've been having issues getting the location set
-# through the parameters, so set an environmental variable just in case o_O
-ENV="SPRING_CONFIG_LOCATION=$SPRING_CONFIG_LOCATION"
+PARAMS="--spring.config.name=$SPRING_CONFIG_NAME --spring.config.location=$SPRING_CONFIG_LOCATION &"
 
 . /etc/init.d/functions
 
@@ -33,7 +29,7 @@ COUNTDOWN=1
 case "$1" in
     start)
     echo "Starting the chron repair service"
-    daemon --user "$CHRON_USER" --pidfile "$REP_PID_FILE" $ENV $JAVA_CMD $PARAMS > /dev/null 2>&1
+    daemon --user "$CHRON_USER" --pidfile "$REP_PID_FILE" $JAVA_CMD $PARAMS > /dev/null 2>&1
     RETVAL=$?
 
     echo "Waiting for startup to complete..."
@@ -71,14 +67,14 @@ case "$1" in
     ;;
     stop)
     echo "Stopping the chron repair service"
-    killproc dpn-intake
+    killproc chron-repair
     ;;
     restart)
     $0 stop
     $0 start
     ;;
     status)
-        status dpn-intake
+        status chron-repair
         RETVAL=$?
     ;;
 esac
