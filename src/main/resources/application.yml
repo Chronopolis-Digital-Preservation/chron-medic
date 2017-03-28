@@ -17,3 +17,12 @@ rsync:
   path: bags/
   stage: /export/outgoing/bags
   server: my-server
+
+ace:
+  ims: ims.umiacs.umd.edu
+  am: http://localhost:8080/ace-am/
+
+spring:
+  profiles:
+    active: default, rsync
+
