@@ -24,6 +24,15 @@ public class Scheduler<T> {
         pool.submitIfAvailable(runnable, t);
     }
 
+    /**
+     * Apply a get operation with the given parameters, returning the result
+     *
+     * @param get the get operation to execute
+     * @param params the parameters to execute with
+     * @param <U> The type of the parameters
+     * @param <E> The return type of the get operation
+     * @return the result of the get
+     */
     public <U, E> Optional<E> get(Function<U, Call<E>> get, U params) {
         Call<E> call = get.apply(params);
         OptionalCallback<E> cb = new OptionalCallback<>();
