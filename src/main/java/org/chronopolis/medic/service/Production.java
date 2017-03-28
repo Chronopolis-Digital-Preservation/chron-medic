@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
  * Created by shake on 2/17/17.
  */
 @Component
-@Profile("production")
+@Profile("default")
 public class Production implements Service {
     @Override
     public void run() {
