@@ -75,3 +75,17 @@ deploy:jdk8:
     - master
   # Archive up the built documentation site.
   image: maven:3.3.9-jdk-8
+
+rpm:
+  before_script:
+    - apt-get update -y
+    - apt-get install -y rsync rpm
+  stage: deploy
+  only:
+    - master
+    - develop
+  script:
+    - 'cd rpm'
+    - './build.sh'
+    - 'for f in `find RPMS -type f`; do curl -X POST -H "Authorization: token $BUILD_TOKEN" --data-binary @$f $SERVER/artifacts/medic/$CI_BUILD_REF_NAME/$(echo $CI_BUILD_REF | cut -c -7)/$(basename $f); done'
+  image: maven:3.3.9-jdk-8
