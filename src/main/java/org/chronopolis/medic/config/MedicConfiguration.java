@@ -4,7 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import okhttp3.OkHttpClient;
+import org.chronopolis.common.ace.AceConfiguration;
+import org.chronopolis.common.ace.AceService;
 import org.chronopolis.common.ace.OkBasicInterceptor;
+import org.chronopolis.common.concurrent.TrackingThreadPoolExecutor;
 import org.chronopolis.medic.client.Repairs;
 import org.chronopolis.rest.models.Bag;
 import org.chronopolis.rest.models.repair.Fulfillment;
@@ -22,17 +25,19 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import java.lang.reflect.Type;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
  * Created by shake on 2/20/17.
  */
 @Configuration
-@EnableConfigurationProperties
+@EnableConfigurationProperties({AceConfiguration.class, IngestConfiguration.class})
 public class MedicConfiguration {
 
     @Bean
-    private Repairs repairs(IngestConfiguration ingest) {
+    public Repairs repairs(IngestConfiguration ingest) {
         OkHttpClient okClient = new OkHttpClient.Builder()
                 .addInterceptor(new OkBasicInterceptor(ingest.getUsername(), ingest.getPassword()))
                 .build();
@@ -57,10 +62,34 @@ public class MedicConfiguration {
 
         Retrofit r = new Retrofit.Builder()
                 .client(okClient)
-                .baseUrl(ingest.getUsername())
+                .baseUrl(ingest.getEndpoint())
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
         return r.create(Repairs.class);
     }
+
+    @Bean
+    public AceService ace(AceConfiguration configuration) {
+        OkHttpClient okClient = new OkHttpClient.Builder()
+                .addInterceptor(new OkBasicInterceptor(configuration.getUser(), configuration.getPassword()))
+                .build();
+
+        Retrofit r = new Retrofit.Builder()
+                .client(okClient)
+                .baseUrl(configuration.getAm())
+                .build();
+        return r.create(AceService.class);
+    }
+
+    @Bean
+    public TrackingThreadPoolExecutor<Repair> repairPool() {
+        return new TrackingThreadPoolExecutor<>(8, 8, 15, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
+    }
+
+    @Bean
+    public TrackingThreadPoolExecutor<Fulfillment> fulfillmentPool() {
+        return new TrackingThreadPoolExecutor<>(8, 8, 15, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
+    }
+
 
 }
