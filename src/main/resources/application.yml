@@ -1,4 +1,4 @@
-# Application Configuration for the Medic
+# Application Configuration for the Chronopolis Repair Service
 
 cron:
   repair: 0 0 * * * *
@@ -22,7 +22,5 @@ ace:
   ims: ims.umiacs.umd.edu
   am: http://localhost:8080/ace-am/
 
-spring:
-  profiles:
-    active: default, rsync
-
+spring.profiles.active: default, rsync
+logging.file: /var/log/chronopolis/repair.log
