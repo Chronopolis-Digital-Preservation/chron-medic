@@ -53,6 +53,7 @@ public class RsyncStageManager implements StageManager {
         // Could have this return a boolean
         // i.e. each operation returns a bool
         //      return allMatch(true) or anyMatch(false)
+        log.info("{} staging content for {}", collection, repair.getTo());
         files.forEach(f -> {
             // Break this out into a method which returns an optional
             try {
@@ -77,6 +78,7 @@ public class RsyncStageManager implements StageManager {
     public boolean clean(Repair repair) {
         String stage = configuration.getStage();
         List<String> files = repair.getFiles();
+        log.info("{} cleaning staged content", repair.getCollection());
         return files.stream()
                 .map(f -> Paths.get(stage, repair.getDepositor(), repair.getCollection(), f))
                 .allMatch(this::tryDelete);

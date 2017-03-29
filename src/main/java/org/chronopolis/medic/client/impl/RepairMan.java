@@ -62,12 +62,11 @@ public class RepairMan implements RepairManager {
         String depositor = repair.getDepositor();
         String collection = repair.getCollection();
 
+        log.info("{} replacing preservation copies with updated versions", collection);
         return files.stream()
                 .allMatch(f -> tryCopy(Paths.get(stage, depositor, collection, f),
                                        Paths.get(preservation, depositor, collection, f)));
     }
-
-
 
     @Override
     public boolean clean(Repair repair) {
@@ -77,6 +76,7 @@ public class RepairMan implements RepairManager {
         String collection = repair.getCollection();
 
         // Might be worth it to do a directory stream or smth
+        log.info("{} cleaning staged copy", collection);
         return files.stream()
                 .map(f -> Paths.get(stage, depositor, collection, f))
                 .allMatch(this::tryDelete);
@@ -126,6 +126,7 @@ public class RepairMan implements RepairManager {
         // handle the replication/blocking
 
         // todo: reify the type (get type -> cast strategy to corresponding object)
+        log.info("{} replicating correct version from {}", repair.getCollection(), fulfillment.getFrom());
         switch (fulfillment.getType()) {
             case ACE:
                 success = false;
@@ -143,8 +144,7 @@ public class RepairMan implements RepairManager {
     /**
      * Method to spawn an rsync process for a repair
      *
-     * todo: do we want to pull to a staging area then validate?
-     *  @param fulfillment the fulfillment containing the rsync information
+     * @param fulfillment the fulfillment containing the rsync information
      * @param repair the repair
      */
     private boolean transferRsync(Fulfillment fulfillment, Repair repair) {
@@ -214,6 +214,7 @@ public class RepairMan implements RepairManager {
 
     @Override
     public CompareResult validate(Repair repair) {
+        log.info("{} validating repaired files match ACE", repair.getCollection());
         OptionalCallback<GsonCollection> callback = new OptionalCallback<>();
         Call<GsonCollection> call = ace.getCollectionByName(repair.getCollection(), repair.getDepositor());
         call.enqueue(callback);
