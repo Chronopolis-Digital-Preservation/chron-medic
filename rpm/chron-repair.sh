@@ -67,7 +67,7 @@ case "$1" in
     ;;
     stop)
     echo "Stopping the chron repair service"
-    killproc chron-repair
+    killproc -p $REP_PID_FILE
     ;;
     restart)
     $0 stop
