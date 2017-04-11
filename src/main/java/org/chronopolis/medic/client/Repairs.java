@@ -30,7 +30,7 @@ public interface Repairs {
     @GET("api/repair/requests")
     Call<Page<Repair>> getRepairs(@QueryMap Map<String, String> params);
 
-    @GET("api/repair/request/{id}")
+    @GET("api/repair/requests/{id}")
     Call<Repair> getRepair(@Path("id") Long id);
 
     @POST("api/repair/requests")
