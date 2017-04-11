@@ -18,7 +18,7 @@ import org.chronopolis.rest.support.ZonedDateTimeSerializer;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Page;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -43,13 +43,13 @@ public class MedicConfiguration {
                 .build();
 
         // Not sure what types we'll actually need but we can figure that out over time
-        Type bagPage = new TypeToken<PageImpl<Bag>>() {}.getType();
+        Type bagPage = new TypeToken<Page<Bag>>() {}.getType();
         Type bagList = new TypeToken<List<Bag>>() {}.getType();
 
-        Type repairPage = new TypeToken<PageImpl<Repair>>() {}.getType();
+        Type repairPage = new TypeToken<Page<Repair>>() {}.getType();
         Type repairList = new TypeToken<List<Repair>>() {}.getType();
 
-        Type ffPage = new TypeToken<PageImpl<Fulfillment>>() {}.getType();
+        Type ffPage = new TypeToken<Page<Fulfillment>>() {}.getType();
         Type ffList = new TypeToken<List<Fulfillment>>() {}.getType();
 
         Gson gson = new GsonBuilder()
