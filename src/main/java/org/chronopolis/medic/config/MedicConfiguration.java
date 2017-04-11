@@ -9,8 +9,10 @@ import org.chronopolis.common.ace.AceService;
 import org.chronopolis.common.ace.OkBasicInterceptor;
 import org.chronopolis.common.concurrent.TrackingThreadPoolExecutor;
 import org.chronopolis.medic.client.Repairs;
+import org.chronopolis.medic.client.serializer.FulfillmentStrategyDeserializer;
 import org.chronopolis.rest.models.Bag;
 import org.chronopolis.rest.models.repair.Fulfillment;
+import org.chronopolis.rest.models.repair.FulfillmentStrategy;
 import org.chronopolis.rest.models.repair.Repair;
 import org.chronopolis.rest.support.PageDeserializer;
 import org.chronopolis.rest.support.ZonedDateTimeDeserializer;
@@ -58,6 +60,7 @@ public class MedicConfiguration {
                 .registerTypeAdapter(repairPage, new PageDeserializer(repairList))
                 .registerTypeAdapter(ZonedDateTime.class, new ZonedDateTimeSerializer())
                 .registerTypeAdapter(ZonedDateTime.class, new ZonedDateTimeDeserializer())
+                .registerTypeAdapter(FulfillmentStrategy.class, new FulfillmentStrategyDeserializer())
                 .create();
 
         Retrofit r = new Retrofit.Builder()
@@ -71,7 +74,7 @@ public class MedicConfiguration {
     @Bean
     public AceService ace(AceConfiguration configuration) {
         OkHttpClient okClient = new OkHttpClient.Builder()
-                .addInterceptor(new OkBasicInterceptor(configuration.getUser(), configuration.getPassword()))
+                .addInterceptor(new OkBasicInterceptor(configuration.getUsername(), configuration.getPassword()))
                 .build();
 
         Retrofit r = new Retrofit.Builder()
