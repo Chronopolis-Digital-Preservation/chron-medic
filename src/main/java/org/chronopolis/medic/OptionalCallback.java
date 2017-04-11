@@ -28,7 +28,7 @@ public class OptionalCallback<T> implements Callback<T> {
         if (response.isSuccessful()) {
             this.body = response.body();
         } else {
-            log.warn("Failed http call: [{}]{} | {}", new Object[]{call.request().method(), call.request().url(), response.code()});
+            log.warn("Failed http call: [{}]{} | {}", call.request().method(), call.request().url(), response.code());
         }
 
         phaser.arriveAndDeregister();
@@ -36,7 +36,7 @@ public class OptionalCallback<T> implements Callback<T> {
 
     @Override
     public void onFailure(Call<T> call, Throwable t) {
-        log.warn("Failed http call: [{}]{}", new Object[]{call.request().method(), call.request().url(), t});
+        log.warn("Failed http call: [{}]{}", call.request().method(), call.request().url(), t);
         phaser.arriveAndDeregister();
     }
 

@@ -111,22 +111,27 @@ public class RepairScheduler extends Scheduler<Repair> {
     */
 
     private void replicate(Page<Repair> page) {
+        log.debug("{} repairs to replace", page.getContent().size());
         page.forEach(repair -> submit(repair, new RepairReplicator(repair, repairs, manager)));
     }
 
     private void runValidate(Page<Repair> page) {
+        log.debug("{} repairs to validate", page.getContent().size());
         page.forEach(repair -> submit(repair, new RepairValidator(repair, repairs, manager)));
     }
 
     private void runCopy(Page<Repair> page) {
+        log.debug("{} repairs to copy", page.getContent().size());
         page.forEach(repair -> submit(repair, new RepairCopier(repair, repairs, manager)));
     }
 
     private void runAudit(Page<Repair> repairPage) {
+        log.debug("{} repairs to audit", repairPage.getContent().size());
         repairPage.forEach(repair -> submit(repair, new RepairAuditor(repair, repairs, manager)));
     }
 
     private void runClean(Page<Repair> repairPage) {
+        log.debug("{} repairs to clean", repairPage.getContent().size());
         repairPage.forEach(repair -> submit(repair, new RepairCleaner(repair, repairs, manager)));
     }
 }

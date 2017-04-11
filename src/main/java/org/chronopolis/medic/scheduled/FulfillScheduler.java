@@ -9,8 +9,9 @@ import org.chronopolis.medic.runners.FulfillmentCleaner;
 import org.chronopolis.medic.runners.FulfillmentStager;
 import org.chronopolis.rest.models.repair.Fulfillment;
 import org.chronopolis.rest.models.repair.FulfillmentStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,6 +25,8 @@ import org.springframework.stereotype.Component;
 @Component
 @EnableScheduling
 public class FulfillScheduler extends Scheduler<Fulfillment> {
+
+    private final Logger log = LoggerFactory.getLogger(FulfillScheduler.class);
 
     private final Repairs repairs;
     private final StageManager manager;
@@ -56,10 +59,12 @@ public class FulfillScheduler extends Scheduler<Fulfillment> {
     }
 
     private void submitForClean(Page<Fulfillment> fulfillments) {
+        log.info("{} fulfillments to clean", fulfillments.getContent().size());
         fulfillments.forEach(fulfillment -> submit(fulfillment, new FulfillmentCleaner(repairs, manager, fulfillment)));
     }
 
     private void submit(Page<Fulfillment> fulfillments) {
+        log.info("{} fulfillments to stage", fulfillments.getContent().size());
         fulfillments.forEach(fulfillment -> submit(fulfillment, new FulfillmentStager(repairs, manager, fulfillment)));
     }
 
