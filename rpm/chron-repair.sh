@@ -14,12 +14,12 @@ REP_JAR="/usr/lib/chronopolis/chron-repair.jar"
 REP_PID_FILE="/var/run/chron-repair"
 
 # Set the location which holds our repair config
-SPRING_CONFIG_NAME="repair"
-SPRING_CONFIG_LOCATION="/etc/chronopolis/"
+export SPRING_CONFIG_NAME="repair"
+export SPRING_CONFIG_LOCATION="/etc/chronopolis/"
 
 JAVA_BIN=/usr/bin/java
 JAVA_CMD="$JAVA_BIN -jar $REP_JAR"
-PARAMS="--spring.config.name=$SPRING_CONFIG_NAME --spring.config.location=$SPRING_CONFIG_LOCATION &"
+PARAMS=" &"
 
 . /etc/init.d/functions
 
