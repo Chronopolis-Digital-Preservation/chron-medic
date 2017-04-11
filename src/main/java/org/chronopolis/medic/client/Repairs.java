@@ -50,25 +50,25 @@ public interface Repairs {
     @POST("api/requests/repair/{id}/fulfill")
     Call<Fulfillment> fulfillRepair(@Path("id") Long id);
 
-    @GET("api/requests/fulfillments")
+    @GET("api/repair/fulfillments")
     Call<Page<Fulfillment>> getFulfillments(@QueryMap Map<String, String> params);
 
-    @GET("api/requests/fulfillments/{id}")
+    @GET("api/repair/fulfillments/{id}")
     Call<Fulfillment> getFulfillment(@Path("id") Long id);
 
-    @PUT("api/requests/fulfillments/{id}/cleaned")
+    @PUT("api/repair/fulfillments/{id}/cleaned")
     Call<Fulfillment> fulfillmentCleaned(@Path("id") Long id);
 
-    @PUT("api/requests/fulfillments/{id}/complete")
+    @PUT("api/repair/fulfillments/{id}/complete")
     Call<Fulfillment> fulfillmentCompleted(@Path("id") Long id);
 
-    @PUT("api/requests/fulfillments/{id}/validated")
+    @PUT("api/repair/fulfillments/{id}/validated")
     Call<Fulfillment> fulfillmentValidated(@Path("id") Long id);
 
-    @PUT("api/requests/fulfillments/{id}/ready")
+    @PUT("api/repair/fulfillments/{id}/ready")
     Call<Fulfillment> readyFulfillment(@Path("id") Long id, @Body FulfillmentStrategy strategy);
 
-    @PUT("api/requests/fulfillments/{id}/status")
+    @PUT("api/repair/fulfillments/{id}/status")
     Call<Fulfillment> fulfillmentUpdated(@Path("id") Long id, @Body FulfillmentStatus status);
 
 }
