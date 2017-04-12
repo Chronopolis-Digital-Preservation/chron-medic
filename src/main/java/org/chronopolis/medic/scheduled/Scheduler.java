@@ -12,8 +12,9 @@ import java.util.function.Function;
  *
  * Created by shake on 3/16/17.
  */
-public class Scheduler<T> {
+public class Scheduler<T extends Comparable> {
 
+    // Might want a way to ensure T implements Comparable
     private final TrackingThreadPoolExecutor<T> pool;
 
     public Scheduler(TrackingThreadPoolExecutor<T> pool) {
