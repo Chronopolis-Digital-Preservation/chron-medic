@@ -67,9 +67,10 @@ public class RsyncStageManager implements StageManager {
             }
         });
 
-        // will probably want to make this a bit cleaner
-        result.setStrategy(new RsyncStrategy().setLink(
-                repair.getTo() + "@" + configuration.getServer() + ":" + configuration.getPath() + "/" + repair.getDepositor() + "/" + repair.getCollection()));
+        StringBuilder link = new StringBuilder(repair.getTo()).append("@").append(configuration.getServer());
+        Path rPath = Paths.get(configuration.getPath(), repair.getDepositor(), repair.getCollection());
+        link.append(":").append(rPath.toString());
+        result.setStrategy(new RsyncStrategy().setLink(link.toString()));
         return result;
     }
 

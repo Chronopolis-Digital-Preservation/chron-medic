@@ -60,7 +60,7 @@ public class RsyncStageManagerTest {
 
         rsyncConfiguration = new RsyncConfiguration();
         rsyncConfiguration.setStage(staging.toString());
-        rsyncConfiguration.setPath("staging/");
+        rsyncConfiguration.setPath("staging");
         rsyncConfiguration.setServer("test-host.umiacs.edu");
 
         manager = new RsyncStageManager(repairConfiguration, rsyncConfiguration);
