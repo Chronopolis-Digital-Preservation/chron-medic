@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Type;
 
 /**
+ * gson deserializer for a fulfillment strategy
  *
  * Created by shake on 4/11/17.
  */
@@ -21,6 +22,15 @@ public class FulfillmentStrategyDeserializer implements JsonDeserializer<Fulfill
 
     private final Logger log = LoggerFactory.getLogger(FulfillmentStrategyDeserializer.class);
 
+    /**
+     * Deserialize given json to a FulfillmentStrategy
+     *
+     * @param jsonElement the json
+     * @param type the type
+     * @param jsonDeserializationContext the context
+     * @return The FulfillmentStrategy represented by the json
+     * @throws JsonParseException if the subtype cannot be found
+     */
     @Override
     public FulfillmentStrategy deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
         JsonObject object = jsonElement.getAsJsonObject();
@@ -32,6 +42,6 @@ public class FulfillmentStrategyDeserializer implements JsonDeserializer<Fulfill
             return jsonDeserializationContext.deserialize(jsonElement, ACEStrategy.class);
         }
 
-        throw new RuntimeException("Unsupported fulfillment strategy " + elementType);
+        throw new JsonParseException("Unsupported fulfillment strategy " + elementType);
     }
 }

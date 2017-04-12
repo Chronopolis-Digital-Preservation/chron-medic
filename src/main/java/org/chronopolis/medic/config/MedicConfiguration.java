@@ -10,6 +10,7 @@ import org.chronopolis.common.ace.OkBasicInterceptor;
 import org.chronopolis.common.concurrent.TrackingThreadPoolExecutor;
 import org.chronopolis.medic.client.Repairs;
 import org.chronopolis.medic.client.serializer.FulfillmentStrategyDeserializer;
+import org.chronopolis.medic.client.serializer.FulfillmentStrategySerializer;
 import org.chronopolis.rest.models.Bag;
 import org.chronopolis.rest.models.repair.Fulfillment;
 import org.chronopolis.rest.models.repair.FulfillmentStrategy;
@@ -17,6 +18,8 @@ import org.chronopolis.rest.models.repair.Repair;
 import org.chronopolis.rest.support.PageDeserializer;
 import org.chronopolis.rest.support.ZonedDateTimeDeserializer;
 import org.chronopolis.rest.support.ZonedDateTimeSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 @EnableConfigurationProperties({AceConfiguration.class, IngestConfiguration.class})
 public class MedicConfiguration {
+    private final Logger log = LoggerFactory.getLogger(MedicConfiguration.class);
 
     @Bean
     public Repairs repairs(IngestConfiguration ingest) {
@@ -60,6 +64,7 @@ public class MedicConfiguration {
                 .registerTypeAdapter(repairPage, new PageDeserializer(repairList))
                 .registerTypeAdapter(ZonedDateTime.class, new ZonedDateTimeSerializer())
                 .registerTypeAdapter(ZonedDateTime.class, new ZonedDateTimeDeserializer())
+                .registerTypeAdapter(FulfillmentStrategy.class, new FulfillmentStrategySerializer())
                 .registerTypeAdapter(FulfillmentStrategy.class, new FulfillmentStrategyDeserializer())
                 .create();
 
@@ -80,6 +85,7 @@ public class MedicConfiguration {
         Retrofit r = new Retrofit.Builder()
                 .client(okClient)
                 .baseUrl(configuration.getAm())
+                .addConverterFactory(GsonConverterFactory.create())
                 .build();
         return r.create(AceService.class);
     }
