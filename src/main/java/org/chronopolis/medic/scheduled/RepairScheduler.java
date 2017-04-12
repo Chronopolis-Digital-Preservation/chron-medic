@@ -68,6 +68,7 @@ public class RepairScheduler extends Scheduler<Repair> {
     @Scheduled(cron = "${cron.repair:0 0 * * * * }")
     public void copy() {
         ImmutableMap<String, String> params = ImmutableMap.of("to", configuration.getUsername(),
+                "replaced", String.valueOf(false),
                 "fulfillment-validated", String.valueOf(true),
                 "fulfillment-status", FulfillmentStatus.TRANSFERRED.toString());
         get(repairs::getRepairs, params).ifPresent(this::runCopy);
