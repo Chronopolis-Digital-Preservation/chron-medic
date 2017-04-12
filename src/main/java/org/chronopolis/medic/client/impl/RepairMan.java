@@ -206,7 +206,10 @@ public class RepairMan implements RepairManager {
             // Audit Running? Find a way to do nothing
             next = cb.get()
                     .map(this::checkCollection)
-                    .orElseGet(() -> AuditStatus.AUDITING);
+                    .orElse(AuditStatus.AUDITING);
+        } else if (current == AuditStatus.SUCCESS || current == AuditStatus.FAIL) {
+            // just in case
+            next = current;
         }
 
         return next;
