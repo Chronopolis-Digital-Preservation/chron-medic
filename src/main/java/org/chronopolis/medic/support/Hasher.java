@@ -19,16 +19,19 @@ public class Hasher {
     private final Logger log = LoggerFactory.getLogger(Hasher.class);
 
     private final Path root;
+    private final Path relative;
 
-    public Hasher(Path root) {
+    public Hasher(Path root, Path relative) {
         this.root = root;
+        this.relative = relative;
     }
 
     public CompareFile hash(Path path) {
         CompareFile compare = new CompareFile();
+        Path full = root.resolve(path);
         String hash;
         try {
-            HashCode hashcode = Files.hash(root.resolve(path).toFile(), Hashing.sha256());
+            HashCode hashcode = Files.hash(full.toFile(), Hashing.sha256());
             hash = hashcode.toString();
         } catch (IOException e) {
             log.error("Error hashing file", e);
@@ -36,8 +39,8 @@ public class Hasher {
         }
 
         compare.setDigest(hash);
-        // Needs to be relative with a leading '/'
-        compare.setPath(path.toString());
+        // might want to remove this constant
+        compare.setPath("/" + relative.relativize(full).toString());
         return compare;
     }
 }

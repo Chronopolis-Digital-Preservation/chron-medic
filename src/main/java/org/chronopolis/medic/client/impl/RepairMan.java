@@ -219,10 +219,9 @@ public class RepairMan implements RepairManager {
         Call<GsonCollection> call = ace.getCollectionByName(repair.getCollection(), repair.getDepositor());
         call.enqueue(callback);
         Optional<CompareResult> validated = callback.get()
-                .flatMap(collection -> compare(repair, collection))
-                .map(response -> checkCompare(repair, response));
-
-        return validated.orElseGet(() -> CompareResult.CONNECTION_ERROR);
+            .flatMap(collection -> compare(repair, collection))
+            .map(response -> checkCompare(repair, response));
+        return validated.orElse(CompareResult.CONNECTION_ERROR);
     }
 
     /**
@@ -234,8 +233,10 @@ public class RepairMan implements RepairManager {
      * @return the response of the ACE api
      */
     private Optional<CompareResponse> compare(Repair repair, GsonCollection collection) {
+        log.debug("Getting information regarding compare");
         CompareRequest request = new CompareRequest();
-        Hasher hasher = new Hasher(Paths.get(configuration.getStage()));
+        Hasher hasher = new Hasher(Paths.get(configuration.getStage()),
+                Paths.get(configuration.getStage(), repair.getDepositor(), repair.getCollection()));
         // Collect files + digests
         List<CompareFile> comparisons = repair.getFiles()
                 .stream()
@@ -243,7 +244,7 @@ public class RepairMan implements RepairManager {
                 .collect(Collectors.toList()); // might be able to just add here but w.e.
         request.setComparisons(comparisons);
 
-        //
+        log.debug("Compiled {} files to compare", comparisons.size());
         OptionalCallback<CompareResponse> callback = new OptionalCallback<>();
         Call<CompareResponse> call = ace.compareToCollection(collection.getId(), request);
         call.enqueue(callback);
