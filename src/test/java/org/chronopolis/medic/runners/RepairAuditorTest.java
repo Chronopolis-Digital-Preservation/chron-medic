@@ -62,6 +62,7 @@ public class RepairAuditorTest {
         when(repairs.getFulfillment(eq(repair.getFulfillment()))).thenReturn(new CallWrapper<>(fulfillment));
         when(manager.audit(any(Repair.class))).thenReturn(success);
         when(repairs.repairAudited(eq(repair.getId()), eq(success))).thenReturn(new CallWrapper<>(repair));
+        when(repairs.fulfillmentCompleted(eq(repair.getFulfillment()))).thenReturn(new CallWrapper<>(fulfillment));
 
         validator.run();
 
