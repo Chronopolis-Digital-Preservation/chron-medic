@@ -11,6 +11,7 @@ import org.chronopolis.medic.OptionalCallback;
 import org.chronopolis.medic.client.CompareResult;
 import org.chronopolis.medic.client.RepairManager;
 import org.chronopolis.medic.config.repair.RepairConfiguration;
+import org.chronopolis.medic.support.Cleaner;
 import org.chronopolis.medic.support.Hasher;
 import org.chronopolis.rest.models.repair.AuditStatus;
 import org.chronopolis.rest.models.repair.Fulfillment;
@@ -30,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -75,11 +77,9 @@ public class RepairMan implements RepairManager {
         String depositor = repair.getDepositor();
         String collection = repair.getCollection();
 
-        // Might be worth it to do a directory stream or smth
         log.info("{} cleaning staged copy", collection);
-        return files.stream()
-                .map(f -> Paths.get(stage, depositor, collection, f))
-                .allMatch(this::tryDelete);
+        Cleaner cleaner = new Cleaner(Paths.get(stage, depositor, collection), new HashSet<>(files));
+        return cleaner.call();
     }
 
     /**
@@ -153,9 +153,9 @@ public class RepairMan implements RepairManager {
         RSyncTransfer transfer = new RSyncTransfer(rsync.getLink());
         try {
             transfer.getFile(rsync.getLink(), Paths.get(configuration.getStage(), repair.getDepositor()));
-            log(repair, transfer.getOutput());
+            rsyncLog(repair, transfer.getOutput());
         } catch (FileTransferException e) {
-            log(repair, transfer.getErrors());
+            rsyncLog(repair, transfer.getErrors());
             log.error("Error transferring", e);
             success = false;
         }
@@ -170,7 +170,7 @@ public class RepairMan implements RepairManager {
      * @param repair the repair being operated on
      * @param stream the stream to capture
      */
-    private void log(Repair repair, InputStream stream) {
+    private void rsyncLog(Repair repair, InputStream stream) {
         Logger log = LoggerFactory.getLogger("rsync-log");
         BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
         try (Stream<String> lines = reader.lines()) {

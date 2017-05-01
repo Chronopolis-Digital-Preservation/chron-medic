@@ -4,6 +4,7 @@ import org.chronopolis.medic.client.StageManager;
 import org.chronopolis.medic.client.StagingResult;
 import org.chronopolis.medic.config.fulfillment.RsyncConfiguration;
 import org.chronopolis.medic.config.repair.RepairConfiguration;
+import org.chronopolis.medic.support.Cleaner;
 import org.chronopolis.rest.models.repair.Repair;
 import org.chronopolis.rest.models.repair.RsyncStrategy;
 import org.slf4j.Logger;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -79,28 +81,11 @@ public class RsyncStageManager implements StageManager {
     public boolean clean(Repair repair) {
         String stage = configuration.getStage();
         List<String> files = repair.getFiles();
+        HashSet<String> fileSet = new HashSet<>(files);
+
         log.info("{} cleaning staged content", repair.getCollection());
-        return files.stream()
-                .map(f -> Paths.get(stage, repair.getDepositor(), repair.getCollection(), f))
-                .allMatch(this::tryDelete);
+        Cleaner cleaner = new Cleaner(Paths.get(stage, repair.getDepositor(), repair.getCollection()), fileSet);
+        return cleaner.call();
     }
 
-
-    /**
-     * Attempt to delete a file which may or may not exist
-     *
-     * @param file The file to delete
-     * @return if the operation completed without exception
-     */
-    private boolean tryDelete(Path file) {
-        try {
-            log.trace("Trying to remove {}", file);
-            Files.deleteIfExists(file);
-        } catch (IOException e) {
-            log.error("Error ", e);
-            return false;
-        }
-
-        return true;
-    }
 }
