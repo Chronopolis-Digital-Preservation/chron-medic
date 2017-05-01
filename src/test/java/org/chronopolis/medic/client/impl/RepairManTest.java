@@ -19,11 +19,16 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -38,6 +43,7 @@ import static org.mockito.Mockito.when;
  * Created by shake on 3/6/17.
  */
 public class RepairManTest {
+    private final Logger log = LoggerFactory.getLogger(RepairManTest.class);
 
     private final String DEPOSITOR = "test-depositor";
     private final String COLLECTION = "test-collection";
@@ -95,6 +101,8 @@ public class RepairManTest {
                 .setCollection(collection)
                 .setFiles(files);
 
+        populate(staging.resolve(DEPOSITOR).resolve(collection), repair);
+        TimeUnit.SECONDS.sleep(10);
         boolean success = manager.clean(repair);
 
         Assert.assertTrue(success);
@@ -102,6 +110,26 @@ public class RepairManTest {
             Path path = staging.resolve(DEPOSITOR).resolve(collection).resolve(file);
             Assert.assertFalse(path.toFile().exists());
         }
+    }
+
+    private void populate(Path directory, Repair repair) throws IOException {
+        log.info("{} creating files for testing", directory);
+        repair.getFiles().stream()
+                .map(directory::resolve)
+                .peek(p -> {
+                    try {
+                        Files.createDirectories(p.getParent());
+                    } catch (IOException e) {
+                        log.warn("", e);
+                    }
+                })
+                .forEach(p -> {
+                    try {
+                        Files.createFile(p);
+                    } catch (IOException e) {
+                        log.warn("", e);
+                    }
+                });
     }
 
     @Test
@@ -116,7 +144,7 @@ public class RepairManTest {
 
     @Test
     public void replicateRsync() throws Exception {
-        boolean success = rsync("test-clean");
+        boolean success = rsync("test-preserve");
         Assert.assertTrue(success);
     }
 

@@ -141,6 +141,7 @@ public class RsyncStageManagerTest {
         repair.setCollection(COLLECTION_CLEAN);
         repair.setFiles(files);
 
+        populate(Paths.get(rsyncConfiguration.getStage(), DEPOSITOR, COLLECTION_CLEAN), repair);
         boolean clean = manager.clean(repair);
         Assert.assertTrue(clean);
 
@@ -151,5 +152,26 @@ public class RsyncStageManagerTest {
             Assert.assertFalse(path.toFile().exists());
         }
     }
+
+    private void populate(Path directory, Repair repair) throws IOException {
+        log.info("{} creating files for testing", directory);
+        repair.getFiles().stream()
+                .map(directory::resolve)
+                .peek(p -> {
+                    try {
+                        Files.createDirectories(p.getParent());
+                    } catch (IOException e) {
+                        log.warn("", e);
+                    }
+                })
+                .forEach(p -> {
+                    try {
+                        Files.createFile(p);
+                    } catch (IOException e) {
+                        log.warn("", e);
+                    }
+                });
+    }
+
 
 }
