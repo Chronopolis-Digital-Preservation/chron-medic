@@ -4,7 +4,6 @@ import org.chronopolis.medic.client.CompareResult;
 import org.chronopolis.medic.client.RepairManager;
 import org.chronopolis.medic.client.Repairs;
 import org.chronopolis.medic.support.CallWrapper;
-import org.chronopolis.rest.models.repair.Fulfillment;
 import org.chronopolis.rest.models.repair.Repair;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,7 +23,6 @@ import static org.mockito.Mockito.when;
 public class RepairValidatorTest {
 
     private Repair repair;
-    private Fulfillment fulfillment;
     private RepairValidator validator;
 
     @Mock
@@ -39,9 +37,6 @@ public class RepairValidatorTest {
         repair = new Repair();
         repair.setFulfillment(1L);
         repair.setId(2L);
-        fulfillment = new Fulfillment();
-        fulfillment.setId(1L);
-        fulfillment.setRepair(2L);
 
         validator = new RepairValidator(repair, repairs, manager);
     }
@@ -49,11 +44,11 @@ public class RepairValidatorTest {
     @Test
     public void testValidate() {
         when(manager.validate(eq(repair))).thenReturn(CompareResult.VALID);
-        when(repairs.fulfillmentValidated(eq(repair.getFulfillment()))).thenReturn(new CallWrapper<>(fulfillment));
+        when(repairs.repairValid(eq(repair.getId()))).thenReturn(new CallWrapper<>(repair));
         validator.run();
 
         verify(manager, times(1)).validate(eq(repair));
-        verify(repairs, times(1)).fulfillmentValidated(eq(repair.getFulfillment()));
+        verify(repairs, times(1)).repairValid(eq(repair.getId()));
     }
 
     @Test
@@ -62,7 +57,7 @@ public class RepairValidatorTest {
         validator.run();
 
         verify(manager, times(1)).validate(eq(repair));
-        verify(repairs, times(0)).fulfillmentValidated(eq(repair.getFulfillment()));
+        verify(repairs, times(0)).repairValid(eq(repair.getId()));
     }
 
     @Test
@@ -71,7 +66,7 @@ public class RepairValidatorTest {
         validator.run();
 
         verify(manager, times(1)).validate(eq(repair));
-        verify(repairs, times(0)).fulfillmentValidated(eq(repair.getFulfillment()));
+        verify(repairs, times(0)).repairValid(eq(repair.getId()));
     }
 
 }

@@ -3,9 +3,8 @@ package org.chronopolis.medic.runners;
 import org.chronopolis.medic.OptionalCallback;
 import org.chronopolis.medic.client.RepairManager;
 import org.chronopolis.medic.client.Repairs;
-import org.chronopolis.rest.models.repair.Fulfillment;
-import org.chronopolis.rest.models.repair.FulfillmentStatus;
 import org.chronopolis.rest.models.repair.Repair;
+import org.chronopolis.rest.models.repair.RepairStatus;
 import retrofit2.Call;
 
 /**
@@ -26,12 +25,8 @@ public class RepairReplicator implements Runnable {
 
     @Override
     public void run() {
-        Call<Fulfillment> call = repairs.getFulfillment(repair.getFulfillment());
-        OptionalCallback<Fulfillment> cb = new OptionalCallback<>();
-        call.enqueue(cb);
-        cb.get()
-          .map(fulfillment -> manager.replicate(fulfillment, repair))
-          .ifPresent(this::update);
+        boolean success = manager.replicate(repair);
+        update(success);
     }
 
     /**
@@ -41,7 +36,7 @@ public class RepairReplicator implements Runnable {
      */
     private void update(boolean success) {
         if (success) {
-            Call<Fulfillment> call = repairs.fulfillmentUpdated(repair.getFulfillment(), FulfillmentStatus.TRANSFERRED);
+            Call<Repair> call = repairs.repairUpdate(repair.getId(), RepairStatus.TRANSFERRED);
             call.enqueue(new OptionalCallback<>());
         }
     }

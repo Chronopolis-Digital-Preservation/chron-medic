@@ -7,8 +7,8 @@ import org.chronopolis.medic.client.StageManager;
 import org.chronopolis.medic.config.IngestConfiguration;
 import org.chronopolis.medic.runners.FulfillmentCleaner;
 import org.chronopolis.medic.runners.FulfillmentStager;
-import org.chronopolis.rest.models.repair.Fulfillment;
-import org.chronopolis.rest.models.repair.FulfillmentStatus;
+import org.chronopolis.rest.models.repair.Repair;
+import org.chronopolis.rest.models.repair.RepairStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @EnableScheduling
-public class FulfillScheduler extends Scheduler<Fulfillment> {
+public class FulfillScheduler extends Scheduler<Repair> {
 
     private final Logger log = LoggerFactory.getLogger(FulfillScheduler.class);
 
@@ -33,7 +33,7 @@ public class FulfillScheduler extends Scheduler<Fulfillment> {
     private final IngestConfiguration configuration;
 
     @Autowired
-    public FulfillScheduler(Repairs repairs, StageManager manager, IngestConfiguration configuration, TrackingThreadPoolExecutor<Fulfillment> executor) {
+    public FulfillScheduler(Repairs repairs, StageManager manager, IngestConfiguration configuration, TrackingThreadPoolExecutor<Repair> executor) {
         super(executor);
         this.repairs = repairs;
         this.manager = manager;
@@ -44,8 +44,8 @@ public class FulfillScheduler extends Scheduler<Fulfillment> {
     public void fulfill() {
         String node = configuration.getUsername();
         ImmutableMap<String, String> params = ImmutableMap.of("from", node,
-                "status", FulfillmentStatus.STAGING.toString());
-        get(repairs::getFulfillments, params).ifPresent(this::submit);
+                "status", RepairStatus.STAGING.toString());
+        get(repairs::getRepairs, params).ifPresent(this::submit);
     }
 
     @Scheduled(cron = "${cron.fulfillment:0 0 * * * * }")
@@ -53,19 +53,19 @@ public class FulfillScheduler extends Scheduler<Fulfillment> {
         String node = configuration.getUsername();
         ImmutableMap<String, String> params = ImmutableMap.of(
                 "from", node,
-                "status", FulfillmentStatus.COMPLETE.toString(), // todo: also check failure
+                "status", RepairStatus.REPAIRED.toString(), // todo: also check failure
                 "cleaned", String.valueOf(false));
-        get(repairs::getFulfillments, params).ifPresent(this::submitForClean);
+        get(repairs::getRepairs, params).ifPresent(this::submitForClean);
     }
 
-    private void submitForClean(Page<Fulfillment> fulfillments) {
-        log.info("{} fulfillments to clean", fulfillments.getContent().size());
-        fulfillments.forEach(fulfillment -> submit(fulfillment, new FulfillmentCleaner(repairs, manager, fulfillment)));
+    private void submitForClean(Page<Repair> page) {
+        log.info("{} repairs to clean", page.getContent().size());
+        page.forEach(repair -> submit(repair, new FulfillmentCleaner(repairs, manager, repair)));
     }
 
-    private void submit(Page<Fulfillment> fulfillments) {
-        log.info("{} fulfillments to stage", fulfillments.getContent().size());
-        fulfillments.forEach(fulfillment -> submit(fulfillment, new FulfillmentStager(repairs, manager, fulfillment)));
+    private void submit(Page<Repair> page) {
+        log.info("{} repairs to stage", page.getContent().size());
+        page.forEach(repair -> submit(repair, new FulfillmentStager(repairs, manager, repair)));
     }
 
 }

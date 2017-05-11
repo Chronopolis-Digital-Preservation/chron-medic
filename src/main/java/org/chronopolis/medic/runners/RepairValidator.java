@@ -4,7 +4,6 @@ import org.chronopolis.medic.OptionalCallback;
 import org.chronopolis.medic.client.CompareResult;
 import org.chronopolis.medic.client.RepairManager;
 import org.chronopolis.medic.client.Repairs;
-import org.chronopolis.rest.models.repair.Fulfillment;
 import org.chronopolis.rest.models.repair.Repair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +33,7 @@ public class RepairValidator implements Runnable {
 
         if (result == CompareResult.VALID) {
             log.info("{} is valid", repair.getCollection());
-            Call<Fulfillment> call = repairs.fulfillmentValidated(repair.getFulfillment());
+            Call<Repair> call = repairs.repairValid(repair.getId());
             call.enqueue(new OptionalCallback<>());
         } else if (result == CompareResult.INVALID) {
             // Fail??

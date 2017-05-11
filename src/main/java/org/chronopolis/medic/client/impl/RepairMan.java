@@ -14,7 +14,6 @@ import org.chronopolis.medic.config.repair.RepairConfiguration;
 import org.chronopolis.medic.support.Cleaner;
 import org.chronopolis.medic.support.Hasher;
 import org.chronopolis.rest.models.repair.AuditStatus;
-import org.chronopolis.rest.models.repair.Fulfillment;
 import org.chronopolis.rest.models.repair.Repair;
 import org.chronopolis.rest.models.repair.RsyncStrategy;
 import org.slf4j.Logger;
@@ -117,7 +116,7 @@ public class RepairMan implements RepairManager {
     }
 
     @Override
-    public boolean replicate(Fulfillment fulfillment, Repair repair) {
+    public boolean replicate(Repair repair) {
         boolean success = true;
         // Need to figure out how to get the fulfillment strategy
         // and creator a downloader off of that
@@ -126,15 +125,15 @@ public class RepairMan implements RepairManager {
         // handle the replication/blocking
 
         // todo: reify the type (get type -> cast strategy to corresponding object)
-        log.info("{} replicating correct version from {}", repair.getCollection(), fulfillment.getFrom());
-        switch (fulfillment.getType()) {
+        log.info("{} replicating correct version from {}", repair.getCollection(), repair.getFrom());
+        switch (repair.getType()) {
             case ACE:
                 success = false;
                 log.warn("ACE transfers are not currently supported");
                 break;
             case NODE_TO_NODE:
             case INGEST:
-                success = transferRsync(fulfillment, repair);
+                success = transferRsync(repair);
                 break;
         }
 
@@ -144,12 +143,11 @@ public class RepairMan implements RepairManager {
     /**
      * Method to spawn an rsync process for a repair
      *
-     * @param fulfillment the fulfillment containing the rsync information
      * @param repair the repair
      */
-    private boolean transferRsync(Fulfillment fulfillment, Repair repair) {
+    private boolean transferRsync(Repair repair) {
         boolean success = true;
-        RsyncStrategy rsync = (RsyncStrategy) fulfillment.getCredentials();
+        RsyncStrategy rsync = (RsyncStrategy) repair.getCredentials();
         RSyncTransfer transfer = new RSyncTransfer(rsync.getLink());
         try {
             transfer.getFile(rsync.getLink(), Paths.get(configuration.getStage(), repair.getDepositor()));

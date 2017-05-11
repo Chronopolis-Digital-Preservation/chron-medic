@@ -12,7 +12,6 @@ import org.chronopolis.medic.client.Repairs;
 import org.chronopolis.medic.client.serializer.FulfillmentStrategyDeserializer;
 import org.chronopolis.medic.client.serializer.FulfillmentStrategySerializer;
 import org.chronopolis.rest.models.Bag;
-import org.chronopolis.rest.models.repair.Fulfillment;
 import org.chronopolis.rest.models.repair.FulfillmentStrategy;
 import org.chronopolis.rest.models.repair.Repair;
 import org.chronopolis.rest.support.PageDeserializer;
@@ -55,11 +54,7 @@ public class MedicConfiguration {
         Type repairPage = new TypeToken<Page<Repair>>() {}.getType();
         Type repairList = new TypeToken<List<Repair>>() {}.getType();
 
-        Type ffPage = new TypeToken<Page<Fulfillment>>() {}.getType();
-        Type ffList = new TypeToken<List<Fulfillment>>() {}.getType();
-
         Gson gson = new GsonBuilder()
-                .registerTypeAdapter(ffPage, new PageDeserializer(ffList))
                 .registerTypeAdapter(bagPage, new PageDeserializer(bagList))
                 .registerTypeAdapter(repairPage, new PageDeserializer(repairList))
                 .registerTypeAdapter(ZonedDateTime.class, new ZonedDateTimeSerializer())
@@ -94,11 +89,5 @@ public class MedicConfiguration {
     public TrackingThreadPoolExecutor<Repair> repairPool() {
         return new TrackingThreadPoolExecutor<>(8, 8, 15, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
     }
-
-    @Bean
-    public TrackingThreadPoolExecutor<Fulfillment> fulfillmentPool() {
-        return new TrackingThreadPoolExecutor<>(8, 8, 15, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
-    }
-
 
 }

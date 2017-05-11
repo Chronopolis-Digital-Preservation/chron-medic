@@ -11,7 +11,6 @@ import org.chronopolis.medic.config.repair.RepairConfiguration;
 import org.chronopolis.medic.support.CallWrapper;
 import org.chronopolis.medic.support.NotFoundCallWrapper;
 import org.chronopolis.rest.models.repair.AuditStatus;
-import org.chronopolis.rest.models.repair.Fulfillment;
 import org.chronopolis.rest.models.repair.FulfillmentType;
 import org.chronopolis.rest.models.repair.Repair;
 import org.chronopolis.rest.models.repair.RsyncStrategy;
@@ -134,11 +133,11 @@ public class RepairManTest {
 
     @Test
     public void replicateAce() throws Exception {
-        Fulfillment fulfillment = new Fulfillment()
-                .setType(FulfillmentType.ACE);
         Repair repair = new Repair();
+        repair.setFrom("test-repair-from");
+        repair.setType(FulfillmentType.ACE);
 
-        boolean success = manager.replicate(fulfillment, repair);
+        boolean success = manager.replicate(repair);
         Assert.assertFalse(success);
     }
 
@@ -163,14 +162,13 @@ public class RepairManTest {
     private boolean rsync(String collection) {
         RsyncStrategy strategy = new RsyncStrategy()
                 .setLink(staging.resolve(DEPOSITOR).resolve(collection).toString());
-        Fulfillment fulfillment = new Fulfillment()
-                .setCredentials(strategy)
-                .setType(FulfillmentType.NODE_TO_NODE);
         Repair repair = new Repair()
+                .setCredentials(strategy)
+                .setType(FulfillmentType.NODE_TO_NODE)
                 .setDepositor(DEPOSITOR)
                 .setCollection(collection);
 
-        return manager.replicate(fulfillment, repair);
+        return manager.replicate(repair);
     }
 
     @Test

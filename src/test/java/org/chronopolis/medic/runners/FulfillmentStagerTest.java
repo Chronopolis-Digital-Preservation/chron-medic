@@ -4,8 +4,6 @@ import org.chronopolis.medic.client.Repairs;
 import org.chronopolis.medic.client.StageManager;
 import org.chronopolis.medic.client.StagingResult;
 import org.chronopolis.medic.support.CallWrapper;
-import org.chronopolis.medic.support.NotFoundCallWrapper;
-import org.chronopolis.rest.models.repair.Fulfillment;
 import org.chronopolis.rest.models.repair.FulfillmentStrategy;
 import org.chronopolis.rest.models.repair.Repair;
 import org.chronopolis.rest.models.repair.RsyncStrategy;
@@ -27,7 +25,6 @@ import static org.mockito.Mockito.when;
 public class FulfillmentStagerTest {
 
     private Repair repair;
-    private Fulfillment fulfillment;
     private FulfillmentStager stager;
 
     @Mock
@@ -39,12 +36,8 @@ public class FulfillmentStagerTest {
     public void before() {
         repairs = mock(Repairs.class);
         manager = mock(StageManager.class);
-        fulfillment = new Fulfillment();
-        fulfillment.setId(1L);
-        fulfillment.setRepair(2L);
         repair = new Repair();
-
-        stager = new FulfillmentStager(repairs, manager, fulfillment);
+        stager = new FulfillmentStager(repairs, manager, repair);
     }
 
     @Test
@@ -54,14 +47,12 @@ public class FulfillmentStagerTest {
         result.setStrategy(new RsyncStrategy());
 
         // setup our mocks
-        when(repairs.getRepair(eq(fulfillment.getRepair()))).thenReturn(new CallWrapper<>(repair));
         when(manager.stage(any(Repair.class))).thenReturn(result); // Use eq once we confirm repair methods work
-        when(repairs.readyFulfillment(eq(fulfillment.getId()), any(FulfillmentStrategy.class))).thenReturn(new CallWrapper<>(fulfillment));
+        when(repairs.repairReady(eq(repair.getId()), any(FulfillmentStrategy.class))).thenReturn(new CallWrapper<>(repair));
 
         stager.run();
-        verify(repairs, times(1)).getRepair(eq(fulfillment.getRepair()));
         verify(manager, times(1)).stage(any(Repair.class));
-        verify(repairs, times(1)).readyFulfillment(eq(fulfillment.getId()), any(FulfillmentStrategy.class));
+        verify(repairs, times(1)).repairReady(eq(repair.getId()), any(FulfillmentStrategy.class));
     }
 
     @Test
@@ -69,24 +60,11 @@ public class FulfillmentStagerTest {
         StagingResult result = new StagingResult();
         result.setSuccess(false);
         // setup our mocks
-        when(repairs.getRepair(eq(fulfillment.getRepair()))).thenReturn(new CallWrapper<>(repair));
         when(manager.stage(any(Repair.class))).thenReturn(result); // Use eq once we confirm repair methods work
 
         stager.run();
-        verify(repairs, times(1)).getRepair(eq(fulfillment.getRepair()));
         verify(manager, times(1)).stage(any(Repair.class));
-        verify(repairs, times(0)).readyFulfillment(eq(fulfillment.getId()), any(FulfillmentStrategy.class));
-    }
-
-    @Test
-    public void runFailedGet() throws Exception {
-        // setup our mocks
-        when(repairs.getRepair(eq(fulfillment.getRepair()))).thenReturn(new NotFoundCallWrapper<>(repair));
-
-        stager.run();
-        verify(repairs, times(1)).getRepair(eq(fulfillment.getRepair()));
-        verify(manager, times(0)).stage(any(Repair.class));
-        verify(repairs, times(0)).readyFulfillment(eq(fulfillment.getId()), any(FulfillmentStrategy.class));
+        verify(repairs, times(0)).repairReady(eq(repair.getId()), any(FulfillmentStrategy.class));
     }
 
 }

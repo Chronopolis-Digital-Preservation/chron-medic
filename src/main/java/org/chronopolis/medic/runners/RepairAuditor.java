@@ -4,8 +4,6 @@ import org.chronopolis.medic.OptionalCallback;
 import org.chronopolis.medic.client.RepairManager;
 import org.chronopolis.medic.client.Repairs;
 import org.chronopolis.rest.models.repair.AuditStatus;
-import org.chronopolis.rest.models.repair.Fulfillment;
-import org.chronopolis.rest.models.repair.FulfillmentStatus;
 import org.chronopolis.rest.models.repair.Repair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,13 +29,8 @@ public class RepairAuditor implements Runnable {
 
     @Override
     public void run() {
-        Call<Fulfillment> call = repairs.getFulfillment(repair.getFulfillment());
-        OptionalCallback<Fulfillment> cb = new OptionalCallback<>();
-        call.enqueue(cb);
-        cb.get().filter(fulfillment -> fulfillment.getStatus() == FulfillmentStatus.TRANSFERRED)
-                // we don't need the fulfillment anymore so just ignore it
-                .map(ignored -> manager.audit(repair))
-                .ifPresent(this::update);
+        AuditStatus status = manager.audit(repair);
+        update(status);
     }
 
     /**
@@ -51,7 +44,7 @@ public class RepairAuditor implements Runnable {
 
         // Also note if our fulfillment is now complete
         if (status == AuditStatus.SUCCESS) {
-            Call<Fulfillment> completed = repairs.fulfillmentCompleted(repair.getFulfillment());
+            Call<Repair> completed = repairs.repairComplete(repair.getId());
             completed.enqueue(new OptionalCallback<>());
         }
     }

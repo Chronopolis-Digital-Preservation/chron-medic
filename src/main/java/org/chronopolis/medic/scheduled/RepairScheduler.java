@@ -10,7 +10,6 @@ import org.chronopolis.medic.runners.RepairCleaner;
 import org.chronopolis.medic.runners.RepairCopier;
 import org.chronopolis.medic.runners.RepairReplicator;
 import org.chronopolis.medic.runners.RepairValidator;
-import org.chronopolis.rest.models.repair.FulfillmentStatus;
 import org.chronopolis.rest.models.repair.Repair;
 import org.chronopolis.rest.models.repair.RepairStatus;
 import org.slf4j.Logger;
@@ -52,7 +51,7 @@ public class RepairScheduler extends Scheduler<Repair> {
     @Scheduled(cron = "${cron.repair:0 0 * * * * }")
     public void repair() {
         ImmutableMap<String, String> params = ImmutableMap.of("to", configuration.getUsername(),
-                "fulfillment-status", FulfillmentStatus.READY.toString());
+                "status", RepairStatus.READY.toString());
         get(repairs::getRepairs, params).ifPresent(this::replicate);
     }
 
@@ -60,8 +59,8 @@ public class RepairScheduler extends Scheduler<Repair> {
     @Scheduled(cron = "${cron.repair:0 0 * * * * }")
     public void validate() {
         ImmutableMap<String, String> params = ImmutableMap.of("to", configuration.getUsername(),
-                "fulfillment-validated", String.valueOf(false),
-                "fulfillment-status", FulfillmentStatus.TRANSFERRED.toString());
+                "validated", String.valueOf(false),
+                "status", RepairStatus.TRANSFERRED.toString());
         get(repairs::getRepairs, params).ifPresent(this::runValidate);
     }
 
@@ -69,8 +68,8 @@ public class RepairScheduler extends Scheduler<Repair> {
     public void copy() {
         ImmutableMap<String, String> params = ImmutableMap.of("to", configuration.getUsername(),
                 "replaced", String.valueOf(false),
-                "fulfillment-validated", String.valueOf(true),
-                "fulfillment-status", FulfillmentStatus.TRANSFERRED.toString());
+                "validated", String.valueOf(true),
+                "status", RepairStatus.TRANSFERRED.toString());
         get(repairs::getRepairs, params).ifPresent(this::runCopy);
     }
 
@@ -79,7 +78,7 @@ public class RepairScheduler extends Scheduler<Repair> {
     public void audit() {
         ImmutableMap<String, String> params = ImmutableMap.of("to", configuration.getUsername(),
                 "replaced", String.valueOf(true),
-                "status", RepairStatus.FULFILLING.toString());
+                "status", RepairStatus.TRANSFERRED.toString());
         get(repairs::getRepairs, params).ifPresent(this::runAudit);
     }
 

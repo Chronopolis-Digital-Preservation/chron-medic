@@ -1,7 +1,6 @@
 package org.chronopolis.medic.client;
 
 import org.chronopolis.rest.models.repair.AuditStatus;
-import org.chronopolis.rest.models.repair.Fulfillment;
 import org.chronopolis.rest.models.repair.Repair;
 
 /**
@@ -32,11 +31,10 @@ public interface RepairManager {
     /**
      * Replicate files from a remote node
      *
-     * @param fulfillment the fulfillment to replicate from
-     * @param repair the repair
+     * @param repair the repair to replicate
      * @return the success of the replication
      */
-    boolean replicate(Fulfillment fulfillment, Repair repair);
+    boolean replicate(Repair repair);
 
     /**
      * Check replicated files

@@ -3,8 +3,6 @@ package org.chronopolis.medic.runners;
 import org.chronopolis.medic.client.Repairs;
 import org.chronopolis.medic.client.StageManager;
 import org.chronopolis.medic.support.CallWrapper;
-import org.chronopolis.medic.support.NotFoundCallWrapper;
-import org.chronopolis.rest.models.repair.Fulfillment;
 import org.chronopolis.rest.models.repair.Repair;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,7 +22,6 @@ import static org.mockito.Mockito.when;
 public class FulfillmentCleanerTest {
 
     private Repair repair;
-    private Fulfillment fulfillment;
     private FulfillmentCleaner cleaner;
 
     @Mock
@@ -36,48 +33,30 @@ public class FulfillmentCleanerTest {
     public void before() {
         repairs = mock(Repairs.class);
         manager = mock(StageManager.class);
-        fulfillment = new Fulfillment();
-        fulfillment.setId(1L);
-        fulfillment.setRepair(2L);
         repair = new Repair();
 
-        cleaner = new FulfillmentCleaner(repairs, manager, fulfillment);
+        cleaner = new FulfillmentCleaner(repairs, manager, repair);
     }
 
     @Test
     public void runSuccess() throws Exception {
         // setup our mocks
-        when(repairs.getRepair(eq(fulfillment.getRepair()))).thenReturn(new CallWrapper<>(repair));
         when(manager.clean(any(Repair.class))).thenReturn(true); // Use eq once we confirm repair methods work
-        when(repairs.fulfillmentCleaned(eq(fulfillment.getId()))).thenReturn(new CallWrapper<>(fulfillment));
+        when(repairs.repairCleaned(eq(repair.getId()))).thenReturn(new CallWrapper<>(repair));
 
         cleaner.run();
-        verify(repairs, times(1)).getRepair(eq(fulfillment.getRepair()));
         verify(manager, times(1)).clean(any(Repair.class));
-        verify(repairs, times(1)).fulfillmentCleaned(eq(fulfillment.getId()));
+        verify(repairs, times(1)).repairCleaned(eq(repair.getId()));
     }
 
     @Test
     public void runFailedClean() throws Exception {
         // setup our mocks
-        when(repairs.getRepair(eq(fulfillment.getRepair()))).thenReturn(new CallWrapper<>(repair));
         when(manager.clean(any(Repair.class))).thenReturn(false); // Use eq once we confirm repair methods work
 
         cleaner.run();
-        verify(repairs, times(1)).getRepair(eq(fulfillment.getRepair()));
         verify(manager, times(1)).clean(any(Repair.class));
-        verify(repairs, times(0)).fulfillmentCleaned(eq(fulfillment.getId()));
-    }
-
-    @Test
-    public void runFailedGet() throws Exception {
-        // setup our mocks
-        when(repairs.getRepair(eq(fulfillment.getRepair()))).thenReturn(new NotFoundCallWrapper<>(repair));
-
-        cleaner.run();
-        verify(repairs, times(1)).getRepair(eq(fulfillment.getRepair()));
-        verify(manager, times(0)).clean(any(Repair.class));
-        verify(repairs, times(0)).fulfillmentCleaned(eq(fulfillment.getId()));
+        verify(repairs, times(0)).repairCleaned(eq(repair.getId()));
     }
 
 }

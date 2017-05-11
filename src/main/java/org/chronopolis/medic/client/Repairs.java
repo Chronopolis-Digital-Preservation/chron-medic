@@ -1,11 +1,10 @@
 package org.chronopolis.medic.client;
 
 import org.chronopolis.rest.models.repair.AuditStatus;
-import org.chronopolis.rest.models.repair.Fulfillment;
-import org.chronopolis.rest.models.repair.FulfillmentStatus;
 import org.chronopolis.rest.models.repair.FulfillmentStrategy;
 import org.chronopolis.rest.models.repair.Repair;
 import org.chronopolis.rest.models.repair.RepairRequest;
+import org.chronopolis.rest.models.repair.RepairStatus;
 import org.springframework.data.domain.Page;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -24,51 +23,40 @@ import java.util.Map;
  */
 public interface Repairs {
 
-    // todo: Should these be split up in to two interfaces?
-    // Repair API
-
-    @GET("api/repair/requests")
+    @GET("api/repairs")
     Call<Page<Repair>> getRepairs(@QueryMap Map<String, String> params);
 
-    @GET("api/repair/requests/{id}")
+    @GET("api/repairs/{id}")
     Call<Repair> getRepair(@Path("id") Long id);
 
-    @POST("api/repair/requests")
+    @POST("api/repairs")
     Call<Repair> createRepair(@Body RepairRequest request);
 
-    @PUT("api/repair/requests/{id}/cleaned")
+    @PUT("api/repairs/{id}/cleaned")
     Call<Repair> repairCleaned(@Path("id") Long id);
 
-    @PUT("api/repair/requests/{id}/replaced")
+    @PUT("api/repairs/{id}/replaced")
     Call<Repair> repairCopied(@Path("id") Long id);
 
-    @PUT("api/repair/requests/{id}/audit")
+    @PUT("api/repairs/{id}/audit")
     Call<Repair> repairAudited(@Path("id") Long id, @Body AuditStatus status);
 
-    // Fulfillment API
+    @POST("api/repairs/{id}/fulfill")
+    Call<Repair> fulfillRepair(@Path("id") Long id);
 
-    @POST("api/requests/repair/{id}/fulfill")
-    Call<Fulfillment> fulfillRepair(@Path("id") Long id);
+    // @PUT("api/repairs/{id}/cleaned")
+    // Call<Fulfillment> fulfillmentCleaned(@Path("id") Long id);
 
-    @GET("api/repair/fulfillments")
-    Call<Page<Fulfillment>> getFulfillments(@QueryMap Map<String, String> params);
+    @PUT("api/repairs/{id}/complete")
+    Call<Repair> repairComplete(@Path("id") Long id);
 
-    @GET("api/repair/fulfillments/{id}")
-    Call<Fulfillment> getFulfillment(@Path("id") Long id);
+    @PUT("api/repairs/{id}/validated")
+    Call<Repair> repairValid(@Path("id") Long id);
 
-    @PUT("api/repair/fulfillments/{id}/cleaned")
-    Call<Fulfillment> fulfillmentCleaned(@Path("id") Long id);
+    @PUT("api/repairs/{id}/ready")
+    Call<Repair> repairReady(@Path("id") Long id, @Body FulfillmentStrategy strategy);
 
-    @PUT("api/repair/fulfillments/{id}/complete")
-    Call<Fulfillment> fulfillmentCompleted(@Path("id") Long id);
-
-    @PUT("api/repair/fulfillments/{id}/validated")
-    Call<Fulfillment> fulfillmentValidated(@Path("id") Long id);
-
-    @PUT("api/repair/fulfillments/{id}/ready")
-    Call<Fulfillment> readyFulfillment(@Path("id") Long id, @Body FulfillmentStrategy strategy);
-
-    @PUT("api/repair/fulfillments/{id}/status")
-    Call<Fulfillment> fulfillmentUpdated(@Path("id") Long id, @Body FulfillmentStatus status);
+    @PUT("api/repairs/{id}/status")
+    Call<Repair> repairUpdate(@Path("id") Long id, @Body RepairStatus status);
 
 }
