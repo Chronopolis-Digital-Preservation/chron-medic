@@ -90,6 +90,7 @@ public class RepairMan implements RepairManager {
      */
     private boolean tryCopy(Path from, Path to) {
         try {
+            log.trace("Copying {} to {}", from, to);
             Files.createDirectories(to.getParent());
             Files.copy(from, to, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {

@@ -53,7 +53,9 @@ public class Cleaner implements Callable<Boolean> {
             Files.walkFileTree(root, new SimpleFileVisitor<Path>() {
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     Path relative = root.relativize(file);
-                    boolean contains = files.contains(relative.toString());
+                    // the relative directory is missing the leading "/", which is there because it is
+                    // locally the "root" of the collection
+                    boolean contains = files.contains("/" + relative.toString());
                     log.debug("{} to be removed: {}", relative, contains);
                     if (contains) {
                         Files.delete(file);

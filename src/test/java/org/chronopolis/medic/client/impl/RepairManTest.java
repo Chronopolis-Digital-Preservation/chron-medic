@@ -10,6 +10,7 @@ import org.chronopolis.medic.client.CompareResult;
 import org.chronopolis.medic.config.repair.RepairConfiguration;
 import org.chronopolis.medic.support.CallWrapper;
 import org.chronopolis.medic.support.NotFoundCallWrapper;
+import org.chronopolis.medic.support.Staging;
 import org.chronopolis.rest.models.repair.AuditStatus;
 import org.chronopolis.rest.models.repair.FulfillmentType;
 import org.chronopolis.rest.models.repair.Repair;
@@ -21,13 +22,10 @@ import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -76,7 +74,8 @@ public class RepairManTest {
     @Test
     public void replace() throws Exception {
         String collection = "test-preserve";
-        ImmutableList<String> files = ImmutableList.of("data/backup-1", "data/sub/backup-2");
+        ImmutableList<String> relative = ImmutableList.of("data/backup-1", "data/sub/backup-2");
+        ImmutableList<String> files = ImmutableList.of("/data/backup-1", "/data/sub/backup-2");
         Repair repair = new Repair()
                 .setFiles(files)
                 .setCollection(collection)
@@ -85,7 +84,7 @@ public class RepairManTest {
         boolean success = manager.replace(repair);
 
         Assert.assertTrue(success);
-        for (String file : files) {
+        for (String file : relative) {
             Path path = preservation.resolve(DEPOSITOR).resolve(collection).resolve(file);
             Assert.assertTrue(path.toFile().exists());
         }
@@ -94,41 +93,21 @@ public class RepairManTest {
     @Test
     public void remove() throws Exception {
         String collection = "test-remove";
-        ImmutableList<String> files = ImmutableList.of("data/remove-1", "data/sub/remove-2");
+        Path remove = staging.resolve(DEPOSITOR).resolve(collection);
+        ImmutableList<String> files = ImmutableList.of("/data/remove-1", "/data/sub/remove-2");
         Repair repair = new Repair()
                 .setDepositor(DEPOSITOR)
                 .setCollection(collection)
                 .setFiles(files);
 
-        populate(staging.resolve(DEPOSITOR).resolve(collection), repair);
-        TimeUnit.SECONDS.sleep(10);
+        Staging.populate(remove, repair);
         boolean success = manager.clean(repair);
 
         Assert.assertTrue(success);
         for (String file : files) {
-            Path path = staging.resolve(DEPOSITOR).resolve(collection).resolve(file);
+            Path path = Paths.get(remove.toString(), file);
             Assert.assertFalse(path.toFile().exists());
         }
-    }
-
-    private void populate(Path directory, Repair repair) throws IOException {
-        log.info("{} creating files for testing", directory);
-        repair.getFiles().stream()
-                .map(directory::resolve)
-                .peek(p -> {
-                    try {
-                        Files.createDirectories(p.getParent());
-                    } catch (IOException e) {
-                        log.warn("", e);
-                    }
-                })
-                .forEach(p -> {
-                    try {
-                        Files.createFile(p);
-                    } catch (IOException e) {
-                        log.warn("", e);
-                    }
-                });
     }
 
     @Test

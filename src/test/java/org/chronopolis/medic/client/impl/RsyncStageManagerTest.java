@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import org.chronopolis.medic.client.StagingResult;
 import org.chronopolis.medic.config.fulfillment.RsyncConfiguration;
 import org.chronopolis.medic.config.repair.RepairConfiguration;
+import org.chronopolis.medic.support.Staging;
 import org.chronopolis.rest.models.repair.FulfillmentStrategy;
 import org.chronopolis.rest.models.repair.FulfillmentType;
 import org.chronopolis.rest.models.repair.Repair;
@@ -123,16 +124,15 @@ public class RsyncStageManagerTest {
                 Files.deleteIfExists(path);
             } catch (IOException ignored) {
             }
-
         });
     }
 
     @Test
     public void clean() throws Exception {
         String COLLECTION_CLEAN = "test-clean";
-        String CLEAN_1 = "data/clean-1";
-        String CLEAN_2 = "data/clean-2";
-        String CLEAN_3 = "data/sub/clean-3";
+        String CLEAN_1 = "/data/clean-1";
+        String CLEAN_2 = "/data/clean-2";
+        String CLEAN_3 = "/data/sub/clean-3";
         ImmutableList<String> files = ImmutableList.of(CLEAN_1, CLEAN_2, CLEAN_3);
 
         Repair repair = new Repair();
@@ -141,7 +141,7 @@ public class RsyncStageManagerTest {
         repair.setCollection(COLLECTION_CLEAN);
         repair.setFiles(files);
 
-        populate(Paths.get(rsyncConfiguration.getStage(), DEPOSITOR, COLLECTION_CLEAN), repair);
+        Staging.populate(Paths.get(rsyncConfiguration.getStage(), DEPOSITOR, COLLECTION_CLEAN), repair);
         boolean clean = manager.clean(repair);
         Assert.assertTrue(clean);
 
@@ -152,26 +152,5 @@ public class RsyncStageManagerTest {
             Assert.assertFalse(path.toFile().exists());
         }
     }
-
-    private void populate(Path directory, Repair repair) throws IOException {
-        log.info("{} creating files for testing", directory);
-        repair.getFiles().stream()
-                .map(directory::resolve)
-                .peek(p -> {
-                    try {
-                        Files.createDirectories(p.getParent());
-                    } catch (IOException e) {
-                        log.warn("", e);
-                    }
-                })
-                .forEach(p -> {
-                    try {
-                        Files.createFile(p);
-                    } catch (IOException e) {
-                        log.warn("", e);
-                    }
-                });
-    }
-
 
 }
