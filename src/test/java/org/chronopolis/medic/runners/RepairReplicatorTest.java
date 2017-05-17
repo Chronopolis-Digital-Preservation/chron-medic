@@ -35,7 +35,6 @@ public class RepairReplicatorTest {
         repairs = mock(Repairs.class);
         manager = mock(RepairManager.class);
         repair = new Repair();
-        repair.setFulfillment(1L);
         repair.setId(2L);
 
         replicator = new RepairReplicator(repair, repairs, manager);

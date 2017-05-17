@@ -32,6 +32,7 @@ public class FulfillmentCleaner implements Runnable {
 
         boolean clean = manager.clean(repair);
         if (clean) {
+            // todo: when we have an api method for updating this, execute the call
             Call<Repair> call = repairs.repairCleaned(repair.getId());
         }
     }

@@ -35,7 +35,6 @@ public class RepairValidatorTest {
         repairs = mock(Repairs.class);
         manager = mock(RepairManager.class);
         repair = new Repair();
-        repair.setFulfillment(1L);
         repair.setId(2L);
 
         validator = new RepairValidator(repair, repairs, manager);

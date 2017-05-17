@@ -35,7 +35,6 @@ public class RepairAuditorTest {
         repairs = mock(Repairs.class);
         manager = mock(RepairManager.class);
         repair = new Repair();
-        repair.setFulfillment(1L);
         repair.setId(2L);
 
         validator = new RepairAuditor(repair, repairs, manager);
