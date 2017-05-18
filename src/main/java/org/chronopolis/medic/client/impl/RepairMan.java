@@ -100,22 +100,6 @@ public class RepairMan implements RepairManager {
         return true;
     }
 
-    /**
-     * Helper method to try and delete a file
-     *
-     * @param path The path to delete
-     * @return If the operation completed without exception
-     */
-    private boolean tryDelete(Path path) {
-        try {
-            Files.deleteIfExists(path);
-        } catch (IOException e) {
-            log.error("", e);
-            return false;
-        }
-        return true;
-    }
-
     @Override
     public boolean replicate(Repair repair) {
         boolean success = true;
