@@ -144,19 +144,20 @@ public class RsyncStageManagerTest {
         ImmutableList<String> files = ImmutableList.of(CLEAN_1, CLEAN_2, CLEAN_3);
 
         Repair repair = new Repair();
+        repair.setId(102L);
         repair.setTo(TO);
         repair.setDepositor(DEPOSITOR);
         repair.setCollection(COLLECTION_CLEAN);
         repair.setFiles(files);
 
-        Staging.populate(Paths.get(rsyncConfiguration.getStage(), DEPOSITOR, COLLECTION_CLEAN), repair);
+        Staging.populate(Paths.get(rsyncConfiguration.getStage(), repair.getId().toString()), repair);
         boolean clean = manager.clean(repair);
         Assert.assertTrue(clean);
 
         // Assert that our files no longer exist
         // todo: should also check that the directories are removed
         for (String file : files) {
-            Path path = Paths.get(rsyncConfiguration.getStage(), repair.getDepositor(), repair.getCollection(), file);
+            Path path = Paths.get(rsyncConfiguration.getStage(), repair.getId().toString(), file);
             Assert.assertFalse(path.toFile().exists());
         }
     }
