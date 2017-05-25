@@ -69,7 +69,9 @@ public class RsyncStageManagerTest {
 
     @Test
     public void stage() throws Exception {
+        Long repairId = 100L;
         Repair repair = new Repair();
+        repair.setId(repairId);
         repair.setTo(TO);
         repair.setDepositor(DEPOSITOR);
         repair.setCollection(COLLECTION_STAGE);
@@ -83,22 +85,24 @@ public class RsyncStageManagerTest {
         FulfillmentStrategy strategy = stage.getStrategy();
         Assert.assertEquals(FulfillmentType.NODE_TO_NODE, strategy.getType());
         RsyncStrategy reified = (RsyncStrategy) strategy;
-        String link = TO + "@" + rsyncConfiguration.getServer() + ":" + rsyncConfiguration.getPath() + "/" + DEPOSITOR + "/" + COLLECTION_STAGE;
+        String link = TO + "@" + rsyncConfiguration.getServer() + ":" + rsyncConfiguration.getPath() + "/" + repairId;
         Assert.assertEquals(link, reified.getLink());
 
         // Assert that the files were made
-        Path corrupt = Paths.get(rsyncConfiguration.getStage(), repair.getDepositor(), repair.getCollection(), CORRUPT_1);
-        Path corruptSub = Paths.get(rsyncConfiguration.getStage(), repair.getDepositor(), repair.getCollection(), CORRUPT_2);
+        Path corrupt = Paths.get(rsyncConfiguration.getStage(), repairId.toString(), CORRUPT_1);
+        Path corruptSub = Paths.get(rsyncConfiguration.getStage(), repairId.toString(), CORRUPT_2);
         Assert.assertTrue(corrupt.toFile().exists());
         Assert.assertTrue(corruptSub.toFile().exists());
 
         // clean up our staged files
-        cleanStage(COLLECTION_STAGE, files);
+        cleanStage(repairId, files);
     }
 
     @Test
     public void stageAlreadyExists() throws Exception {
+        long repairId = 101L;
         Repair repair = new Repair();
+        repair.setId(repairId);
         repair.setTo(TO);
         repair.setDepositor(DEPOSITOR);
         repair.setCollection(COLLECTION_STAGE);
@@ -110,15 +114,19 @@ public class RsyncStageManagerTest {
         Assert.assertFalse(duplicate.isSuccess());
 
         // clean up our staged files
-        cleanStage(COLLECTION_STAGE, files);
+        cleanStage(repairId, files);
     }
 
     /**
      * Clean up after ourselves
+     *
+     * @param id the id of the staged replications
+     * @param files the files of the replication
+     * @throws IOException if there's an error removing files
      */
-    private void cleanStage(String collection, List<String> files) throws IOException {
+    private void cleanStage(Long id, List<String> files) throws IOException {
         files.forEach(file -> {
-            Path path = staging.resolve(DEPOSITOR).resolve(collection).resolve(file);
+            Path path = staging.resolve(id.toString()).resolve(file);
             log.info("Removing {}", path);
             try {
                 Files.deleteIfExists(path);

@@ -42,6 +42,11 @@ import static org.mockito.Mockito.when;
 public class RepairManTest {
     private final Logger log = LoggerFactory.getLogger(RepairManTest.class);
 
+    private final Long PRESERVE_ID = 2L;
+    private final Long VALIDATE_ID = 4L;
+    private final Long POPULDATE_ID = 3L;
+    private final Long ACE_COLLECTION_ID = 1L;
+
     private final String DEPOSITOR = "test-depositor";
     private final String COLLECTION = "test-collection";
     private final String COLLECTION_VALIDATE = "test-validate";
@@ -73,10 +78,12 @@ public class RepairManTest {
 
     @Test
     public void replace() throws Exception {
+        Long replaceId = PRESERVE_ID;
         String collection = "test-preserve";
         ImmutableList<String> relative = ImmutableList.of("data/backup-1", "data/sub/backup-2");
         ImmutableList<String> files = ImmutableList.of("/data/backup-1", "/data/sub/backup-2");
         Repair repair = new Repair()
+                .setId(replaceId)
                 .setFiles(files)
                 .setCollection(collection)
                 .setDepositor(DEPOSITOR);
@@ -93,9 +100,10 @@ public class RepairManTest {
     @Test
     public void remove() throws Exception {
         String collection = "test-remove";
-        Path remove = staging.resolve(DEPOSITOR).resolve(collection);
+        Path remove = staging.resolve(POPULDATE_ID.toString());
         ImmutableList<String> files = ImmutableList.of("/data/remove-1", "/data/sub/remove-2");
         Repair repair = new Repair()
+                .setId(POPULDATE_ID)
                 .setDepositor(DEPOSITOR)
                 .setCollection(collection)
                 .setFiles(files);
@@ -122,13 +130,14 @@ public class RepairManTest {
 
     @Test
     public void replicateRsync() throws Exception {
-        boolean success = rsync("test-preserve");
+        boolean success = rsync("test-preserve", PRESERVE_ID);
         Assert.assertTrue(success);
     }
 
     @Test
     public void replicateRsyncFail() throws Exception {
-        boolean success = rsync("test-not-exists");
+        // use the populate id as it does not exist in staging
+        boolean success = rsync("test-not-exists", POPULDATE_ID);
         Assert.assertFalse(success);
     }
 
@@ -136,12 +145,14 @@ public class RepairManTest {
      * run manager.replicate with an rsync strategy
      *
      * @param collection the collection to attempt
+     * @param id
      * @return the return value of manager.replicate
      */
-    private boolean rsync(String collection) {
+    private boolean rsync(String collection, Long id) {
         RsyncStrategy strategy = new RsyncStrategy()
-                .setLink(staging.resolve(DEPOSITOR).resolve(collection).toString());
+                .setLink(staging.resolve(id.toString()).toString());
         Repair repair = new Repair()
+                .setId(id)
                 .setCredentials(strategy)
                 .setType(FulfillmentType.NODE_TO_NODE)
                 .setDepositor(DEPOSITOR)
@@ -161,7 +172,7 @@ public class RepairManTest {
                 .group(DEPOSITOR)
                 .name(COLLECTION)
                 .build();
-        collection.setId(1L);
+        collection.setId(ACE_COLLECTION_ID);
 
         when(ace.getCollectionByName(eq(COLLECTION), eq(DEPOSITOR))).thenReturn(new CallWrapper<>(collection));
         when(ace.startAudit(eq(collection.getId()), eq(true))).thenReturn(new CallWrapper<>(null)); // uhhh I guess
@@ -183,7 +194,7 @@ public class RepairManTest {
                 .group(DEPOSITOR)
                 .name(COLLECTION)
                 .build();
-        collection.setId(1L);
+        collection.setId(ACE_COLLECTION_ID);
 
         when(ace.getCollectionByName(eq(COLLECTION), eq(DEPOSITOR))).thenReturn(new NotFoundCallWrapper<>(collection));
         AuditStatus status = manager.audit(repair);
@@ -205,7 +216,7 @@ public class RepairManTest {
                 .group(DEPOSITOR)
                 .name(COLLECTION)
                 .build();
-        collection.setId(1L);
+        collection.setId(ACE_COLLECTION_ID);
 
         when(ace.getCollectionByName(eq(COLLECTION), eq(DEPOSITOR))).thenReturn(new CallWrapper<>(collection));
         AuditStatus status = manager.audit(repair);
@@ -221,7 +232,7 @@ public class RepairManTest {
     @Test
     public void testValidateSuccess() {
         String file = "/data/file-1";
-        Long id = 1L;
+        Long id = ACE_COLLECTION_ID;
         CompareResult result = validate(ImmutableList.of(file), ImmutableSet.of(file), ImmutableSet.of(), ImmutableSet.of(), id);
 
         Assert.assertNotNull(result);
@@ -234,7 +245,7 @@ public class RepairManTest {
     public void testValidateFileNotFound() {
         String file = "/data/file-1";
         String notFound = "/data/file-not-found";
-        Long id = 1L;
+        Long id = ACE_COLLECTION_ID;
 
         CompareResult result = validate(ImmutableList.of(file, notFound), ImmutableSet.of(file), ImmutableSet.of(), ImmutableSet.of(notFound), id);
 
@@ -248,7 +259,7 @@ public class RepairManTest {
     public void testValidateFileIsDifferent() {
         String file = "/data/file-1";
         String invalid = "/data/file-invalid";
-        Long id = 1L;
+        Long id = ACE_COLLECTION_ID;
 
         CompareResult result = validate(ImmutableList.of(file, invalid), ImmutableSet.of(file), ImmutableSet.of(invalid), ImmutableSet.of(), id);
 
@@ -264,6 +275,7 @@ public class RepairManTest {
                                    ImmutableSet<String> notFound,
                                    Long collectionId) {
         Repair repair = new Repair()
+                .setId(VALIDATE_ID)
                 .setFiles(files)
                 .setDepositor(DEPOSITOR)
                 .setCollection(COLLECTION_VALIDATE)

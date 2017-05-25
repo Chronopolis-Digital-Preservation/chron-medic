@@ -26,6 +26,13 @@ public class Hasher {
         this.relative = relative;
     }
 
+    /**
+     * Hash a file and return a @{link CompareFile} for use with
+     * the ACE compare api
+     *
+     * @param path the path to resolve with the root for hashing
+     * @return CompareFile
+     */
     public CompareFile hash(Path path) {
         CompareFile compare = new CompareFile();
         Path full = root.resolve(path);
