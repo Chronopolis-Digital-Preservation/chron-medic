@@ -33,12 +33,12 @@ public class Cleaner implements Callable<Boolean> {
 
     private void checkDir(Path dir) throws IOException {
         long count;
+
+        // Ensure the Stream is closed before removing
         try (Stream<Path> stream = Files.list(dir)) {
             count = stream.count();
-
         }
 
-        // Ensure the Stream above is closed before removing
         if (count == 0) {
             log.debug("{} removing directory", dir);
             Files.delete(dir);
@@ -68,13 +68,10 @@ public class Cleaner implements Callable<Boolean> {
                     return FileVisitResult.CONTINUE;
                 }
             });
-
-            checkDir(root.getParent());
         } catch (IOException e) {
             log.error("Problem while cleaning", e);
             success = false;
         }
-
 
         return success;
     }
