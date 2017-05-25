@@ -1,5 +1,6 @@
 package org.chronopolis.medic.scheduled;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.chronopolis.common.concurrent.TrackingThreadPoolExecutor;
 import org.chronopolis.medic.client.Repairs;
@@ -50,17 +51,20 @@ public class FulfillScheduler extends Scheduler<Repair> {
 
     @Scheduled(cron = "${cron.fulfillment:0 0 * * * * }")
     public void clean() {
-        String node = configuration.getUsername();
-        ImmutableMap<String, String> params = ImmutableMap.of(
-                "from", node,
-                "status", RepairStatus.REPAIRED.toString(), // todo: also check failure
-                "cleaned", String.valueOf(false));
-        get(repairs::getRepairs, params).ifPresent(this::submitForClean);
-    }
+        // todo: how can we submit a cleaning thread which uses a real Repair... maybe... we should scan first
+        //       then submit separate threads based on if the repair needs to be cleaned or not
+        //       regardless not too important at the moment... it can be in the next release
+        String cleaning = "cleaning-only";
+        Repair fake = new Repair();
+        fake.setId(-1L);
+        fake.setTo(cleaning);
+        fake.setFiles(ImmutableList.of());
+        fake.setRequester(cleaning);
+        fake.setDepositor(cleaning);
+        fake.setCollection(cleaning);
 
-    private void submitForClean(Page<Repair> page) {
-        log.info("{} repairs to clean", page.getContent().size());
-        page.forEach(repair -> submit(repair, new FulfillmentCleaner(repairs, manager, repair)));
+        FulfillmentCleaner cleaner = new FulfillmentCleaner(repairs, manager);
+        submit(fake, cleaner);
     }
 
     private void submit(Page<Repair> page) {

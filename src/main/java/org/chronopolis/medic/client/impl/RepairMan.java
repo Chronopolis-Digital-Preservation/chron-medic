@@ -135,7 +135,7 @@ public class RepairMan implements RepairManager {
         RsyncStrategy rsync = (RsyncStrategy) repair.getCredentials();
         RSyncTransfer transfer = new RSyncTransfer(rsync.getLink());
 
-        // Ok so what if we say fuck it and just pull to staging/{id}
+        // Pull to staging/{id}
         // That way we expect it no matter what and don't need to mess w/ the depositor
         Path root = Paths.get(configuration.getStage());
         try {
@@ -288,7 +288,8 @@ public class RepairMan implements RepairManager {
         if (Objects.equals(collection.getState(), "A")) {
             status = AuditStatus.SUCCESS;
         } else if (Objects.equals(collection.getState(), "E")) {
-            status = AuditStatus.FAIL;
+            log.warn("{} still has error'd state!", collection.getName());
+            // status = AuditStatus.FAIL;
         }
 
         return status;
