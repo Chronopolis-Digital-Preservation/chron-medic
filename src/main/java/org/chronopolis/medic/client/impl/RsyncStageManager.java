@@ -90,12 +90,10 @@ public class RsyncStageManager implements StageManager {
         return result;
     }
 
-    private void check() throws IOException {
-        String stage = configuration.getStage();
-        Stream<Path> stream = Files.find(Paths.get(configuration.getStage()), 2, (p, a) -> true);
-
+    public Stream<Path> ongoing() throws IOException {
+        log.debug("Returning stream for directory {}", configuration.getStage());
+        return Files.list(Paths.get(configuration.getStage()));
     }
-
 
     @Override
     public boolean clean(Repair repair) {
@@ -104,7 +102,7 @@ public class RsyncStageManager implements StageManager {
         HashSet<String> fileSet = new HashSet<>(files);
 
         log.info("{} cleaning staged content", repair.getCollection());
-        Cleaner cleaner = new Cleaner(Paths.get(stage, repair.getDepositor(), repair.getCollection()), fileSet);
+        Cleaner cleaner = new Cleaner(Paths.get(stage, repair.getId().toString()), fileSet);
         return cleaner.call();
     }
 
