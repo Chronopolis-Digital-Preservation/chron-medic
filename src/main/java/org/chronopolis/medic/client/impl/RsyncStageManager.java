@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Service which stages files for rsync
@@ -43,11 +44,18 @@ public class RsyncStageManager implements StageManager {
     public StagingResult stage(Repair repair) {
         StagingResult result = new StagingResult();
 
+        String id = repair.getId().toString();
         String depositor = repair.getDepositor();
         String collection = repair.getCollection();
         String stage = configuration.getStage();
         String preservation = repairConfiguration.getPreservation();
         List<String> files = repair.getFiles();
+
+        // how should we do namespacing?
+        // the id is generally good enough, though a bit vague
+        // we could include the to_node but that's not necessary...
+        // IDK MAN SO MANY OPTIONS
+        // we'll just go with the id for now
 
         // todo: we might want to allow for different staging strategies
         //       link, copy, raw
@@ -58,8 +66,9 @@ public class RsyncStageManager implements StageManager {
         log.info("{} staging content for {}", collection, repair.getTo());
         files.forEach(f -> {
             // Break this out into a method which returns an optional
+
             try {
-                Path staged = Paths.get(stage, depositor, collection, f);
+                Path staged = Paths.get(stage, id, f);
                 Path preserved = Paths.get(preservation, depositor, collection, f);
                 Files.createDirectories(staged.getParent());
                 Files.createSymbolicLink(staged, preserved);
@@ -69,11 +78,22 @@ public class RsyncStageManager implements StageManager {
             }
         });
 
+        // So let's see... stage = /staging/depositor/collection/data/...
+        //                  link = to@server:/path/depositor/collection/...
+        // So we could conceivably do....
+        //                 stage = /staging/repair_id/data/...
+        //                  link = to@server:/path/repair_id/data/...
         StringBuilder link = new StringBuilder(repair.getTo()).append("@").append(configuration.getServer());
-        Path rPath = Paths.get(configuration.getPath(), repair.getDepositor(), repair.getCollection());
+        Path rPath = Paths.get(configuration.getPath(), id);
         link.append(":").append(rPath.toString());
         result.setStrategy(new RsyncStrategy().setLink(link.toString()));
         return result;
+    }
+
+    private void check() throws IOException {
+        String stage = configuration.getStage();
+        Stream<Path> stream = Files.find(Paths.get(configuration.getStage()), 2, (p, a) -> true);
+
     }
 
 

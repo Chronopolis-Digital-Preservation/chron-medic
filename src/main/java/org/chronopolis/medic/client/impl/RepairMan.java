@@ -60,12 +60,13 @@ public class RepairMan implements RepairManager {
         List<String> files = repair.getFiles();
         String preservation = configuration.getPreservation();
         String stage = configuration.getStage();
+        String id = repair.getId().toString();
         String depositor = repair.getDepositor();
         String collection = repair.getCollection();
 
         log.info("{} replacing preservation copies with updated versions", collection);
         return files.stream()
-                .allMatch(f -> tryCopy(Paths.get(stage, depositor, collection, f),
+                .allMatch(f -> tryCopy(Paths.get(stage, id, f),
                                        Paths.get(preservation, depositor, collection, f)));
     }
 
@@ -73,11 +74,10 @@ public class RepairMan implements RepairManager {
     public boolean clean(Repair repair) {
         List<String> files = repair.getFiles();
         String stage = configuration.getStage();
-        String depositor = repair.getDepositor();
         String collection = repair.getCollection();
 
         log.info("{} cleaning staged copy", collection);
-        Cleaner cleaner = new Cleaner(Paths.get(stage, depositor, collection), new HashSet<>(files));
+        Cleaner cleaner = new Cleaner(Paths.get(stage, repair.getId().toString()), new HashSet<>(files));
         return cleaner.call();
     }
 
@@ -134,8 +134,12 @@ public class RepairMan implements RepairManager {
         boolean success = true;
         RsyncStrategy rsync = (RsyncStrategy) repair.getCredentials();
         RSyncTransfer transfer = new RSyncTransfer(rsync.getLink());
+
+        // Ok so what if we say fuck it and just pull to staging/{id}
+        // That way we expect it no matter what and don't need to mess w/ the depositor
+        Path root = Paths.get(configuration.getStage());
         try {
-            transfer.getFile(rsync.getLink(), Paths.get(configuration.getStage(), repair.getDepositor()));
+            transfer.getFile(rsync.getLink(), root);
             rsyncLog(repair, transfer.getOutput());
         } catch (FileTransferException e) {
             rsyncLog(repair, transfer.getErrors());
@@ -220,13 +224,15 @@ public class RepairMan implements RepairManager {
      */
     private Optional<CompareResponse> compare(Repair repair, GsonCollection collection) {
         log.debug("Getting information regarding compare");
+        String id = repair.getId().toString();
         CompareRequest request = new CompareRequest();
         Hasher hasher = new Hasher(Paths.get(configuration.getStage()),
-                Paths.get(configuration.getStage(), repair.getDepositor(), repair.getCollection()));
+                Paths.get(configuration.getStage(), id));
+
         // Collect files + digests
         List<CompareFile> comparisons = repair.getFiles()
                 .stream()
-                .map(file -> hasher.hash(Paths.get(repair.getDepositor(), repair.getCollection(), file)))
+                .map(file -> hasher.hash(Paths.get(id, file)))
                 .collect(Collectors.toList()); // might be able to just add here but w.e.
         request.setComparisons(comparisons);
 
