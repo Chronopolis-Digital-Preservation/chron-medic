@@ -49,27 +49,23 @@ verify:
   script:
     - 'mvn $MAVEN_CLI_OPTS verify'
 
-# For `master` branch run `mvn deploy` automatically.
-# Here you need to decide whether you want to use JDK7 or 8.
-# To get this working you need to define a volume while configuring your gitlab-ci-multi-runner.
-# Mount your `settings.xml` as `/root/.m2/settings.xml` which holds your secrets.
-# See https://maven.apache.org/settings.html
-deploy:jdk8:
-  # Use stage test here, so the pages job may later pickup the created site.
-  stage: test
-  script:
-    - 'mvn $MAVEN_CLI_OPTS deploy'
-  only:
-    - tags
-
-rpm:
-  before_script:
-    - apt-get update -y
-    - apt-get install -y rsync rpm
+# Deploy on tags only
+.deploy:base: &deploy_base
   stage: deploy
   only:
     - tags
+
+deploy:jdk8:
+  <<: *deploy_base
+  script:
+    - 'mvn $MAVEN_CLI_OPTS deploy'
+
+rpm:
+  <<: *deploy_base
+  before_script:
+    - apt-get update -y
+    - apt-get install -y rsync rpm
   script:
     - 'cd rpm'
     - './build.sh'
-    - 'for f in `find RPMS -type f`; do curl -X POST -H "Authorization: token $BUILD_TOKEN" --data-binary @$f $SERVER/artifacts/medic/$CI_BUILD_REF_NAME/$(echo $CI_BUILD_REF | cut -c -7)/$(basename $f); done'
+    - 'find RPMS -type f -exec curl -X PUT -u ${ARTIFACTORY_USER}:${ARTIFACTORY_PASS} https://lib-artifacts.ucsd.edu/artifactory/rpm/chronopolis/ -T {} \;'
